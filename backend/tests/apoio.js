@@ -7,6 +7,8 @@ import { newDb } from 'pg-mem';
 import request from 'supertest';
 import { criarApp } from '../src/app.js';
 
+// Caminho fixo, relativo a este arquivo.
+// eslint-disable-next-line security/detect-non-literal-fs-filename
 const esquema = readFileSync(new URL('../src/db/schema.sql', import.meta.url), 'utf8');
 
 /**

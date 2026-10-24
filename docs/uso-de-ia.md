@@ -49,6 +49,9 @@ A partir da Etapa 4, cada linha cita o prompt usado da biblioteca `docs/prompts.
 | 23/10 | 2. Requisitos | Período do relatório de pendências | Perguntou se haveria relatório mensal além do semanal | Rejeitei | Apenas semanal. Pensar em checklist de longo prazo é cansativo para o público com TDAH |
 | 23/10 | 2. Requisitos | Encaixar minha ideia do box "Logo mais" (ideias para explorar, sem obrigação de concluir) | Registrar como visão pós-MVP, com histórias futuras, fora do escopo de 26/10 | Aceitei | Cortei escopo para entregar no prazo sem perder a visão do produto. A ideia fica documentada na seção 10 dos requisitos |
 | 23/10 | 3. Arquitetura | Diagramas, modelo de dados e endpoints | C4 níveis 1 e 2, camadas, modelo de dados, 13 endpoints e fluxos | Aceitei | Revisei e os endpoints cobrem todas as histórias do MVP; a rastreabilidade está na tabela de endpoints |
+| 24/10 | 4. Backend | Escrever testes das regras de turno antes do código (TDD, P-04b) | 23 testes citando RN e HU; depois a implementação mínima | A revisar | Confirmar se os testes cobrem o comportamento que espero dos alertas |
+| 24/10 | 4. Backend | Implementar o relatório com IA (P-07) | Regras objetivas (RN-08, RN-11) no código; IA só com mensagem e parecidas (P-07 v2) | A revisar | Proposta da IA: menos risco de alucinação e menos custo. Confirmar se concordo |
+| 24/10 | 4. Backend | Teste da API em banco PostgreSQL real | Encontrou contagem dupla de atividade movida no mesmo dia; corrigida com teste | A revisar | Bug achado no teste manual com curl, não nos testes automáticos |
 
 ## Evidência de revisão de código: IA bruta × revisão humana
 
