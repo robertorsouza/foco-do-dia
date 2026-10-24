@@ -1,0 +1,16 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente (nunca versionar chaves)
+.env
+.env.local
+
+# Build e cobertura
+dist/
+coverage/
+
+# Sistema e editores
+.DS_Store
+*.log
+.vscode/*
+!.vscode/extensions.json
