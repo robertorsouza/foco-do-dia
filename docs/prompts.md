@@ -191,6 +191,8 @@ USUÁRIO:
 </dados>
 ```
 
+**Versão 3 (revisão independente, 25/10).** Os dados passam a incluir a `contagem` real do dia e o prompt manda usar exatamente esses números; o exemplo de resposta deixou de ter números ("X de Y"), porque a IA tendia a copiar o "5 de 7" do exemplo.
+
 **Proteções no código, além do prompt:**
 
 | Proteção | Onde | Teste |
@@ -198,9 +200,11 @@ USUÁRIO:
 | Títulos delimitados em `<dados>`, nunca misturados às instruções (OWASP LLM01, RNF-09) | `montarMensagem()` | `relatorios.test.js` |
 | Resposta validada com Zod; formato errado → relatório sem IA | `validarResposta()` | idem |
 | Pares com títulos inventados são descartados | `validarResposta()` | idem |
+| Números da mensagem conferidos com a contagem real; se não baterem, vale a mensagem padrão | `validarResposta()` | `revisao-independente.test.js` |
+| `<` e `>` dos títulos escapados no JSON, para um título com `</dados>` não fechar o bloco | `montarMensagem()` | idem |
 | Mensagem com tom punitivo é descartada | `validarResposta()` | idem |
-| Tempo limite de 10 s e falha da IA → relatório sem sugestões (RNF-05, RNF-06) | `clienteIA.js`, `gerarSugestoesIA()` | idem |
-| Cache das sugestões para dias encerrados | `relatoriosService.js` | — |
+| Tempo limite de 10 s no total, sem nova tentativa; falha da IA → relatório sem sugestões (RNF-05, RNF-06) | `clienteIA.js`, `gerarSugestoesIA()` | idem |
+| Cache das sugestões para dias passados e para o dia de hoje já fechado | `relatoriosService.js` | — |
 
 ---
 
@@ -227,6 +231,33 @@ certeza; diga "sem problemas" quando não houver.
 **Resultado:** 3 itens. 1 aceito (teste do limite geral), 2 com discordância fundamentada (premissa de 1 instância; CSP não afeta uma API JSON). Ver `uso-de-ia.md`.
 
 **Versão 2 (PR #3).** Acrescentada a restrição *"Considere o contexto de implantação: plano gratuito do Render, com uma única instância"*, porque no PR #2 o Copilot classificou como grave um risco de escala que não existe nesse cenário. Com o contexto completo, a revisão veio calibrada: 1 item médio aceito, 1 baixo aceito em parte, 3 pontos "sem problemas". Exemplo do ciclo esboço → teste → avaliação → refinamento (curso C3, Unidade 2).
+
+---
+
+### P-09 · Revisão independente de código · *persona + escopo fechado + verificação por execução*
+
+Usado em 25/10 num agente separado, que **não participou da conversa nem escreveu o código** e só tinha acesso ao repositório. Objetivo: tirar o viés de quem escreveu.
+
+```
+PERSONA: Você é um engenheiro de software sênior fazendo uma revisão de código INDEPENDENTE
+de um projeto que nunca viu. Você não escreveu esse código e não tem compromisso com ele.
+Seu trabalho é encontrar problemas reais, não confirmar que está tudo bem.
+CONTEXTO: [repositório; stack; requisitos e arquitetura em docs/; Render gratuito com
+1 instância; MVP de um usuário com código de acesso]
+TAREFA: leia requisitos, arquitetura e todo o código e os testes. Verifique, citando
+arquivo e linha: correção frente a cada RN e HU; bugs de lógica (datas, fuso, concorrência,
+transações, estados); segurança; integração com IA; testes que passariam com código errado
+e diferenças entre o banco de teste e o PostgreSQL real; prontidão para produção.
+VERIFICAÇÃO: comprove executando — rode a suíte e, se suspeitar de um bug, escreva um
+teste temporário, rode e apague.
+RESTRIÇÕES: não altere arquivos do projeto nem faça commits. Não invente; marque
+"a confirmar" quando não tiver certeza.
+FORMATO: tabela (#, severidade com critério definido, arquivo:linha, problema em uma frase
+simples, cenário real, como verificou, sugestão); lista "verificado e sem problemas";
+veredito de uma linha.
+```
+
+**Resultado:** 0 altos, 6 médios, 9 baixos — 4 deles bugs de concorrência e de fluxo que escaparam das três revisões anteriores. O pedido de **provar executando** fez diferença: 9 dos 15 itens vieram com teste temporário no PostgreSQL real.
 
 ---
 

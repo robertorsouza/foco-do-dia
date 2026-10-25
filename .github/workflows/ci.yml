@@ -1,5 +1,9 @@
 # Integração contínua: a cada push e Pull Request, roda lint, formatação e testes.
 # Nenhum código (escrito por pessoa ou por IA) entra na main sem passar aqui.
+#
+# Os testes rodam duas vezes: no banco em memória (rápido, o mesmo de `npm test`)
+# e num PostgreSQL 16 real. A revisão independente mostrou que o banco em memória
+# não reproduz tudo (bloqueios em concorrência, ON CONFLICT, transações).
 name: CI
 
 on:
@@ -13,6 +17,20 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: foco_teste
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,5 +43,9 @@ jobs:
         run: npm run lint
       - name: Formatação
         run: npx prettier --check .
-      - name: Testes com cobertura mínima
+      - name: Testes no banco em memória, com cobertura mínima
         run: npm run coverage
+      - name: Testes no PostgreSQL real (inclui concorrência)
+        run: npm test
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/foco_teste

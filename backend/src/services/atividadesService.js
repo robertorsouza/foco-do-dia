@@ -38,16 +38,35 @@ export async function atualizarAtividade(db, id, campos, hoje) {
   return repo.atualizarAtividade(db, id, campos);
 }
 
-/** HU-03: exclui uma atividade. */
-export async function excluirAtividade(db, id) {
-  if (!(await repo.excluirAtividade(db, id))) throw naoEncontrada();
+/**
+ * HU-03: exclui uma atividade de hoje em diante, pendente ou feita.
+ * Atividades de dias passados, movidas, deixadas de lado ou em aberto fazem parte
+ * do histórico usado nos relatórios (RN-13). Para tirar uma pendência da seção
+ * "Atividades pendentes", use "deixar de lado".
+ */
+export async function excluirAtividade(db, id, hoje) {
+  const atividade = await repo.buscarAtividade(db, id);
+  if (!atividade) throw naoEncontrada();
+  const permitida = ['pendente', 'feita'].includes(atividade.status) && atividade.data >= hoje;
+  const excluida =
+    permitida &&
+    (await repo.excluirAtividade(db, id, {
+      statusPermitidos: ['pendente', 'feita'],
+      aPartirDe: hoje,
+    }));
+  if (!excluida) {
+    throw new ErroDeNegocio(
+      409,
+      'Essa atividade faz parte do histórico e não pode ser excluída. Você pode deixá-la de lado.',
+    );
+  }
 }
 
 /**
  * Calcula para onde a atividade vai (HU-05, HU-06, HU-11).
  * Atividades "em_aberto" usam hoje como referência para "amanhã".
  */
-function calcularDestino(atividade, escolha, hoje) {
+export function calcularDestino(atividade, escolha, hoje) {
   if (escolha.destino === 'proximo_turno') {
     const destino = proximoTurno(atividade.turno, atividade.data);
     if (atividade.status === 'em_aberto' || destino.data < hoje) {
@@ -66,14 +85,30 @@ function calcularDestino(atividade, escolha, hoje) {
  * Aplica um destino: mover (próximo turno, amanhã, outra data) ou deixar de lado.
  * Ao mover, a original fica "movida" e uma cópia nasce no destino apontando
  * para ela (origem_id), preservando o histórico para os relatórios.
+ *
+ * O status é trocado de forma condicional (só se ainda estiver pendente ou em
+ * aberto): com dois toques quase simultâneos, só o primeiro vale.
+ *
+ * @param {{diaSendoFechado?: string}} [opcoes] Ao fechar um dia, o destino não pode
+ *   cair nesse mesmo dia, senão o dia seria reaberto durante o próprio fechamento.
  */
-export async function aplicarDestino(db, atividade, escolha, hoje) {
+export async function aplicarDestino(db, atividade, escolha, hoje, opcoes = {}) {
+  const origens = ['pendente', 'em_aberto'];
+  const jaResolvida = () =>
+    new ErroDeNegocio(409, 'Essa atividade já foi resolvida. Atualize a tela.');
+
   if (escolha.destino === 'deixar_de_lado') {
-    return repo.atualizarAtividade(db, atividade.id, { status: 'deixada_de_lado' });
+    const resultado = await repo.transicionarStatus(db, atividade.id, origens, 'deixada_de_lado');
+    if (!resultado) throw jaResolvida();
+    return resultado;
   }
+
   const { data, turno } = calcularDestino(atividade, escolha, hoje);
+  if (opcoes.diaSendoFechado && data === opcoes.diaSendoFechado) {
+    throw new ErroDeNegocio(422, 'Ao fechar o dia, escolha amanhã, outra data ou deixar de lado.');
+  }
+  if (!(await repo.transicionarStatus(db, atividade.id, origens, 'movida'))) throw jaResolvida();
   await garantirDia(db, data, hoje, { paraEscrita: true });
-  await repo.atualizarAtividade(db, atividade.id, { status: 'movida' });
   return repo.inserirAtividade(db, {
     data,
     turno,
@@ -103,6 +138,25 @@ export async function deixarDeLado(db, id, hoje) {
     throw new ErroDeNegocio(409, 'Essa atividade já foi resolvida.');
   }
   return aplicarDestino(db, atividade, { destino: 'deixar_de_lado' }, hoje);
+}
+
+/** HU-09: cria uma atividade fixa e a inclui nos próximos dias já existentes. */
+export async function criarFixa(db, dados, hoje) {
+  const fixa = await repo.inserirFixa(db, dados);
+  for (const data of await repo.listarDiasAbertosDepoisDe(db, hoje)) {
+    if (!(await repo.existeTituloNoDia(db, data, fixa.titulo))) {
+      await repo.inserirAtividade(db, { data, ...dados, fixaId: fixa.id });
+    }
+  }
+  return fixa;
+}
+
+/** HU-09: desativa uma fixa e tira as cópias ainda pendentes dos próximos dias. */
+export async function desativarFixa(db, id, hoje) {
+  if (!(await repo.desativarFixa(db, id))) {
+    throw new ErroDeNegocio(404, 'Não encontramos essa atividade fixa.');
+  }
+  await repo.removerCopiasFuturasDaFixa(db, id, hoje);
 }
 
 /**

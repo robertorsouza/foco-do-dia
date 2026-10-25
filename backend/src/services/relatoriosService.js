@@ -79,19 +79,21 @@ export async function relatorioDiario({ db, ia, relogio, fuso }, data) {
 
   const feitas = doDia.filter((a) => a.status === 'feita').length;
   const total = doDia.length;
+  const contagem = { feitas, total, percentual: percentual(feitas, total) };
 
-  // Sugestões da IA: em cache para dias passados (não mudam mais).
+  // Sugestões da IA em cache quando o dia já terminou ou foi fechado: o conteúdo
+  // não muda mais e cada nova chamada à IA custaria dinheiro. Reabrir o dia limpa o cache.
   const dia = await repo.buscarDia(db, data);
-  const diaEncerrado = data < dataLocal(relogio(), fuso);
+  const diaEncerrado = data < dataLocal(relogio(), fuso) || Boolean(dia?.fechado_em);
   let ia_sugestoes = diaEncerrado ? dia?.sugestoes_ia : null;
   if (!ia_sugestoes && total > 0) {
-    ia_sugestoes = await gerarSugestoesIA(ia, doDia, janela);
+    ia_sugestoes = await gerarSugestoesIA(ia, doDia, janela, contagem);
     if (ia_sugestoes && diaEncerrado && dia) await repo.salvarSugestoesIA(db, data, ia_sugestoes);
   }
 
   return {
     data,
-    contagem: { feitas, total, percentual: percentual(feitas, total) },
+    contagem,
     mensagem: ia_sugestoes?.mensagem ?? mensagemPadrao(feitas, total),
     por_turno: porTurno,
     plano_amanha: ordenarPorPrioridade(

@@ -3,7 +3,7 @@
  */
 import * as repo from '../db/repositorio.js';
 import { ordenarPorPrioridade, destinoSugerido, TURNOS } from './turnos.js';
-import { aplicarDestino } from './atividadesService.js';
+import { aplicarDestino, calcularDestino } from './atividadesService.js';
 import { ErroDeNegocio } from './erros.js';
 
 /** Status que aparecem nos turnos do dia. Os demais saem dos turnos (RN-12). */
@@ -84,6 +84,21 @@ export async function fecharDia(db, data, destinos, hoje) {
   const dia = await repo.buscarDia(db, data);
   if (!dia) throw new ErroDeNegocio(404, 'Esse dia ainda não tem atividades.');
 
+  // Valida todos os destinos antes de gravar qualquer coisa: um destino inválido
+  // recusa o fechamento inteiro, sem deixar o dia pela metade.
+  const escolhasAntes = new Map(destinos.map((d) => [d.id, d]));
+  for (const atividade of await repo.listarAtividadesDoDia(db, data)) {
+    const escolha = escolhasAntes.get(atividade.id);
+    if (!escolha || atividade.status !== 'pendente' || escolha.destino === 'deixar_de_lado')
+      continue;
+    if (calcularDestino(atividade, escolha, hoje).data === data) {
+      throw new ErroDeNegocio(
+        422,
+        'Ao fechar o dia, escolha amanhã, outra data ou deixar de lado.',
+      );
+    }
+  }
+
   return repo.emTransacao(db, async (tx) => {
     // Reivindica o fechamento primeiro: se duas requisições chegarem juntas,
     // só uma fecha o dia e a outra recebe 409.
@@ -99,11 +114,12 @@ export async function fecharDia(db, data, destinos, hoje) {
     for (const atividade of pendentes) {
       const escolha = escolhas.get(atividade.id);
       if (escolha) {
-        await aplicarDestino(tx, atividade, escolha, hoje);
+        await aplicarDestino(tx, atividade, escolha, hoje, { diaSendoFechado: data });
         resumo[escolha.destino === 'deixar_de_lado' ? 'deixadas_de_lado' : 'movidas'] += 1;
       } else {
-        await repo.atualizarAtividade(tx, atividade.id, { status: 'em_aberto' });
-        resumo.em_aberto += 1;
+        if (await repo.transicionarStatus(tx, atividade.id, ['pendente'], 'em_aberto')) {
+          resumo.em_aberto += 1;
+        }
       }
     }
     return resumo;

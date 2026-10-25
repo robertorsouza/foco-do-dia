@@ -4,7 +4,7 @@
 import { criarApp } from './app.js';
 import { criarPool } from './db/pool.js';
 import { criarClienteIA } from './ai/clienteIA.js';
-import { verificarConfiguracaoDeProducao } from './seguranca.js';
+import { verificarConfiguracaoDeProducao, AMBIENTES_LOCAIS } from './seguranca.js';
 
 verificarConfiguracaoDeProducao(process.env);
 
@@ -15,7 +15,7 @@ const app = criarApp({
   ia: criarClienteIA({ apiKey: process.env.LLM_API_KEY, modelo: process.env.LLM_MODEL }),
   origensPermitidas: process.env.FRONTEND_URL,
   codigoDeAcesso: process.env.APP_ACCESS_TOKEN,
-  atrasDeProxy: process.env.NODE_ENV === 'production',
+  atrasDeProxy: !AMBIENTES_LOCAIS.includes(process.env.NODE_ENV),
 });
 
 app.listen(porta, () => console.log(`Foco do Dia API em http://localhost:${porta}`));

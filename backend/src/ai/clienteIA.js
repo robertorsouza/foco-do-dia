@@ -9,12 +9,13 @@ export const TEMPO_LIMITE_MS = 10_000;
 
 /**
  * Cria o cliente. Sem chave, devolve null e o app segue sem sugestões (RNF-05).
- * @param {{apiKey?: string, modelo?: string}} config
+ * Sem novas tentativas: o limite de 10 s vale para a espera total, não por tentativa.
+ * @param {{apiKey?: string, modelo?: string, baseURL?: string, tempoLimiteMs?: number}} config
  * @returns {{gerar: (sistema: string, usuario: string) => Promise<string>} | null}
  */
-export function criarClienteIA({ apiKey, modelo }) {
+export function criarClienteIA({ apiKey, modelo, baseURL, tempoLimiteMs = TEMPO_LIMITE_MS }) {
   if (!apiKey) return null;
-  const anthropic = new Anthropic({ apiKey, timeout: TEMPO_LIMITE_MS, maxRetries: 1 });
+  const anthropic = new Anthropic({ apiKey, baseURL, timeout: tempoLimiteMs, maxRetries: 0 });
 
   return {
     async gerar(sistema, usuario) {
