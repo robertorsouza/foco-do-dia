@@ -264,6 +264,8 @@ classifique como grave um risco de escala, de vários usuários ou de SEO, que n
 
 **Resultado (v3):** 1 item "a confirmar" (acessibilidade dos popups): já estava implementado em `Popup.jsx`, mas sem teste. Ajustado: teste de foco e Esc, e o foco das confirmações passou para o "não". O Copilot respondeu só 3 das 7 verificações; o autor pediu uma segunda rodada só com as que faltaram (jornadas, confirmações, testes fracos e textos). Lição: **silêncio não é aprovação** — conferir se a resposta cobre tudo o que o prompt pediu.
 
+**Segunda rodada (PR #9):** confirmações e textos sem problemas; 2 itens médios, mas o Copilot leu a versão antiga do código. 1 rejeitado com evidência e 1 ajustado em parte (teste de tocar fora do popup). Lição: **confirmar qual versão a IA revisou** antes de aceitar um achado.
+
 ---
 
 ### P-09 · Revisão independente de código · *persona + escopo fechado + verificação por execução*

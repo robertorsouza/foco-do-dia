@@ -478,3 +478,25 @@ describe('Acessibilidade dos popups (item 1 do Copilot, PR #8)', () => {
     expect(api.feitas('DELETE', '/atividades')).toHaveLength(0);
   });
 });
+
+describe('Acessibilidade dos popups (item 3 do Copilot, segunda rodada)', () => {
+  it('tocar fora do popup fecha sem executar a ação', async () => {
+    const api = criarApiFalsa({ 'GET /hoje': diaCom([atividade(1, 'Mercado', 'tarde')]) });
+    abrirApp(api);
+    const u = usuario();
+    await u.click(await screen.findByRole('button', { name: 'Mercado' }));
+    await u.click(screen.getByRole('button', { name: /^Excluir/ }));
+    const fundo = screen.getByRole('dialog').parentElement;
+    await u.click(fundo);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(api.feitas('DELETE', '/atividades')).toHaveLength(0);
+  });
+
+  it('tocar dentro do popup não fecha', async () => {
+    abrirApp(criarApiFalsa({ 'GET /hoje': diaCom([atividade(1, 'Mercado', 'tarde')]) }));
+    const u = usuario();
+    await u.click(await screen.findByRole('button', { name: 'Mercado' }));
+    await u.click(screen.getByRole('heading', { name: 'Mercado' }));
+    expect(screen.getByRole('dialog')).toBeVisible();
+  });
+});
