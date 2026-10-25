@@ -4,7 +4,9 @@ Planner diário para pessoas com TDAH: checklist por turno, alertas na troca de 
 
 > Mini projeto de Engenharia de Software com IA generativa (especialização AKCIT/UFG), construído com boas práticas (requisitos, ADRs, testes, CI) e IA como copiloto. React + Tailwind, Node.js e PostgreSQL.
 
-**Status:** backend e frontend prontos e testados ponta a ponta. Deploy (Vercel + Render + Neon) em andamento. Este README será completado na entrega final.
+**Status:** publicado e funcionando. Backend, frontend e banco no ar desde 25/10/2026.
+
+**Acesse:** https://foco-do-dia.vercel.app (o código de acesso é enviado junto com a entrega).
 
 **Design:** [protótipo clicável no Figma](https://www.figma.com/design/gHPzXZSxynPrBNYvhBu8Gp) · [jornadas do usuário](docs/jornadas.md)
 
@@ -46,6 +48,16 @@ npm run dev              # app em http://localhost:5173
 Ou, da raiz do projeto: `make help`.
 
 Para rodar os testes também num PostgreSQL real: `TEST_DATABASE_URL=postgresql://... npm test`.
+
+## Onde está publicado
+
+| Parte | Serviço | Endereço |
+| --- | --- | --- |
+| App | Vercel | https://foco-do-dia.vercel.app |
+| API | Render (Ohio) | https://foco-do-dia.onrender.com/api/health |
+| Banco | Neon, PostgreSQL (Ohio) | privado |
+
+Cada merge na `main` publica sozinho, depois de passar no CI. Detalhes em [Arquitetura, seção 10](docs/arquitetura.md).
 
 ## Limitações conhecidas (MVP)
 

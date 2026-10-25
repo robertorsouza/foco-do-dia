@@ -14,7 +14,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - Frontend (React + Tailwind + Vite): código de acesso, dia por turno, menu da atividade, alerta de fim de turno, fechamento do dia, atividades pendentes, dia anterior só para consulta, relatórios do dia e da semana e tela de fixas. 49 testes de tela, job no CI e política de segurança (CSP) na Vercel.
 - "Desfazer" depois de mover uma atividade: endpoint `POST /atividades/:id/desfazer-movimento` e botão no aviso (revisão do autor da jornada J3).
 
+- Publicação: app na Vercel, API no Render e banco no Neon, todos em Ohio (25/10).
+
 ### Alterado
+- Node 22 fixado no backend e no frontend, igual ao CI (o Render tinha instalado o Node 26).
 - Banco de dados de produção: Neon em vez de Render Postgres, cujo plano gratuito expira em 30 dias (ADR-002, PR #4).
 - Proteções falham fechadas: sem `NODE_ENV` declarado como local, a API exige código de acesso (PR #4).
 

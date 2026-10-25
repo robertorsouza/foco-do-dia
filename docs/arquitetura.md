@@ -238,6 +238,19 @@ foco-do-dia/
 
 ## 10. Implantação e testes
 
+**Em produção desde 25/10/2026:**
+
+| Parte | Onde | Endereço |
+| --- | --- | --- |
+| Frontend (React + Vite) | Vercel, pasta `frontend` | https://foco-do-dia.vercel.app |
+| Backend (Node 22 + Express) | Render, plano gratuito, região Ohio, pasta `backend` | https://foco-do-dia.onrender.com |
+| Banco (PostgreSQL 18) | Neon, plano gratuito, AWS US East 2 (Ohio) | só o backend acessa, pela `DATABASE_URL` |
+
+- **Publicação automática:** um merge na `main` publica sozinho no Render e na Vercel. O CI roda antes, em cada PR.
+- **Mesma região:** backend e banco ficam em Ohio, para a conversa entre eles ser rápida. O usuário, em São Paulo, fala com a Vercel (CDN) e com o Render.
+- **Prévias da Vercel:** os endereços de prévia (`foco-do-…-soulz4.vercel.app`) não acessam a API, porque o CORS só libera o domínio de produção. É intencional.
+- **Servidor dormindo:** o Render gratuito dorme sem uso; a primeira abertura do dia pode levar até 1 minuto, e o app mostra "Acordando o app…".
+
 | Item | Como funciona |
 | --- | --- |
 | Migração do banco | `npm start` roda `src/db/migrate.js` antes de subir a API. O esquema é idempotente (`CREATE ... IF NOT EXISTS`), então rodar a cada início é seguro |
