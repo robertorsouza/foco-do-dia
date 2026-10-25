@@ -1,6 +1,6 @@
 # Foco do Dia — Arquitetura
 
-> Versão 0.2 · 25/10/2026 · Autor: Roberto (v0.2: segurança, limites e fechamento atômico, a partir das revisões do backend)
+> Versão 0.3 · 25/10/2026 · Autor: Roberto (v0.3: banco no Neon, concorrência, falha fechada e testes no PostgreSQL real, a partir da revisão independente)
 > Uso de IA: proposta elaborada com apoio do Claude a partir de `docs/requisitos.md`; revisada e validada pelo autor. Decisões registradas em `docs/adr/`.
 
 ---
@@ -31,6 +31,8 @@ flowchart LR
     end
     subgraph Render
         BE["Backend — API REST<br/>Node.js + Express"]
+    end
+    subgraph Neon
         DB[("PostgreSQL<br/>Atividades, dias, fixas")]
     end
     IA["API de IA (LLM)"]
@@ -155,7 +157,9 @@ O frontend só pergunta; quem decide se deve alertar é o backend. Assim a regra
 3. O usuário confirma tudo, ajusta uma por uma ou escolhe "decidir depois".
 4. O frontend chama `POST /dias/:data/fechar`. O backend aplica os destinos, marca o resto como `em_aberto` e registra `fechado_em`. Atividades `em_aberto` deixam de aparecer nos turnos e passam a ser listadas só em `GET /pendencias` (RN-12). O fechamento é atômico: o dia é marcado como fechado no início da transação, com `WHERE fechado_em IS NULL`, então duas requisições simultâneas não fecham o mesmo dia duas vezes. Uma escrita posterior num dia de hoje já fechado reabre o dia (RN-13).
 
-**Fechamento automático às 23h, sem servidor agendado:** o plano gratuito do Render desliga o backend quando não há uso, então não dá para depender de uma tarefa agendada. Usamos **fechamento preguiçoso**: na primeira requisição de um novo dia, o backend verifica se o dia anterior ficou aberto e o fecha aplicando a mesma regra do passo 4. O resultado para o usuário é o mesmo.
+**Fechamento automático, sem servidor agendado:** o plano gratuito do Render desliga o backend quando não há uso, então não dá para depender de uma tarefa agendada. Usamos **fechamento preguiçoso**: na primeira requisição de um novo dia, o backend verifica se o dia anterior ficou aberto e o fecha aplicando a mesma regra do passo 4. Diferença em relação a um fechamento às 23h exato: entre 23h e a primeira abertura do dia seguinte, o dia continua aberto. Para quem usa o app, o efeito é o mesmo, porque ninguém vê o dia nesse intervalo (RN-07).
+
+**Concorrência:** toda troca de status é condicional (`UPDATE ... WHERE status IN (...)`): com dois toques quase simultâneos em "mover" ou "deixar de lado", só o primeiro vale e o segundo recebe 409. O fechamento valida todos os destinos antes de gravar qualquer coisa.
 
 ### 6.3 Relatório do dia com IA (HU-07, HU-09, HU-10)
 
@@ -172,13 +176,13 @@ O frontend só pergunta; quem decide se deve alertar é o backend. Assim a regra
 | Item | Onde fica |
 | --- | --- |
 | Chave da API de IA | Variável de ambiente no Render (`LLM_API_KEY`) |
-| Endereço do banco | Variável de ambiente no Render (`DATABASE_URL`) |
+| Endereço do banco | Variável de ambiente no Render (`DATABASE_URL`), apontando para o Neon (ADR-002) |
 | Endereço da API no frontend | Variável de ambiente na Vercel (`VITE_API_URL`) |
 | Arquivo `.env` local | Listado no `.gitignore`; nunca vai para o GitHub. O repositório tem só um `.env.example` sem valores |
 | CORS | Fechado por padrão: só os domínios em `FRONTEND_URL` podem chamar a API pelo navegador |
 | Código de acesso | Toda rota em `/api` (exceto `/api/health`) exige `Authorization: Bearer <APP_ACCESS_TOKEN>`. Comparação em tempo constante |
 | TLS do banco | Certificado verificado por padrão fora do localhost (`DB_SSL=verify`) |
-| Produção | O servidor não inicia sem `FRONTEND_URL`, `APP_ACCESS_TOKEN` e `DATABASE_URL` |
+| Falha fechada | O servidor não inicia sem `FRONTEND_URL`, `APP_ACCESS_TOKEN` e `DATABASE_URL`, a menos que `NODE_ENV` seja explicitamente `development` ou `test`. `NODE_ENV` vazio (padrão do Render) é tratado como produção |
 | Limite de requisições | 300 por IP a cada 15 min; 10 tentativas erradas de código de acesso por IP a cada 15 min. **Premissa:** contagem em memória, válida para 1 instância (plano gratuito do Render). Ao escalar para 2 ou mais instâncias, trocar por um armazenamento compartilhado (Redis) |
 | Cabeçalhos HTTP | Helmet: `nosniff`, HSTS, CSP, sem `X-Powered-By`. A API só devolve JSON; a CSP padrão não afeta o frontend, que está em outra origem (Vercel) |
 | Entradas | Datas que não existem, identificadores fora do limite e corpos acima de 20 KB são recusados com 422/413, nunca 500 |
@@ -227,3 +231,12 @@ foco-do-dia/
 | [ADR-002](adr/ADR-002-banco-de-dados.md) | PostgreSQL gerenciado em vez de SQLite |
 | [ADR-003](adr/ADR-003-regra-vs-ia-nos-alertas.md) | Regra de negócio decide quando alertar; a IA sugere no relatório |
 | [ADR-004](adr/ADR-004-ferramentas-de-ia.md) | Claude constrói, Copilot revisa e testa, o autor audita |
+
+## 10. Implantação e testes
+
+| Item | Como funciona |
+| --- | --- |
+| Migração do banco | `npm start` roda `src/db/migrate.js` antes de subir a API. O esquema é idempotente (`CREATE ... IF NOT EXISTS`), então rodar a cada início é seguro |
+| Conexões perdidas | `pool.on('error')` registra a queda de uma conexão ociosa sem derrubar o servidor |
+| Testes | `npm test` usa um PostgreSQL em memória (pg-mem). Com `TEST_DATABASE_URL`, a mesma suíte roda num PostgreSQL real, cada ambiente num schema próprio. O CI roda as duas, porque o pg-mem não reproduz bloqueios de concorrência, `ON CONFLICT ... RETURNING` nem o desfazer de transações |
+

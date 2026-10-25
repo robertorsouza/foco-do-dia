@@ -10,7 +10,8 @@
 | Ferramenta | Papel no projeto |
 | --- | --- |
 | Claude | Copiloto de construção: rascunho de requisitos, arquitetura, ADRs e código (ADR-004) |
-| GitHub Copilot | Copiloto de revisão: revisão de Pull Requests e geração de testes (ADR-004) |
+| GitHub Copilot | Copiloto de revisão: revisão de Pull Requests e geração de testes (ADR-004). No plano Free, via Copilot Chat com os prompts P-05 e P-08 |
+| Agente revisor independente | Instância separada do Claude, sem acesso à conversa nem participação no código, usada para a revisão final do backend (prompt P-09) |
 | Eu (Roberto) | "AI code auditor": reviso toda contribuição da IA antes do merge (curso C2, Unidade 4.3) |
 | Figma | Design das telas (feito pelo autor) |
 
@@ -101,6 +102,9 @@ Registro do que aconteceu ao colocar o projeto para funcionar de verdade (GitHub
 | 25/10 | Revisão de QA do PR #2 | O Copilot recomendou não fazer merge por um risco de escala que não existe no plano gratuito | Aceitei 1 de 3 itens e documentei a premissa dos outros 2 | Uma revisão de IA não conhece o contexto de negócio e de infraestrutura. A decisão final é do engenheiro, com justificativa |
 | 25/10 | Revisão da lógica | 6 bugs de regra de negócio, incluindo uma diferença entre o banco de teste (pg-mem) e o PostgreSQL real | Corrigidos com TDD; 94 testes; conferido no banco real | Revisões de segurança não acham bugs de lógica, e vice-versa. E o ambiente de teste precisa se comportar como a produção |
 | 25/10 | Prompt de QA refinado | No PR #2, o Copilot superestimou um risco de escala por não saber que o Render gratuito usa uma instância | Acrescentei essa restrição ao P-08 no PR #3; a resposta veio calibrada e com veredito "pode fazer merge" | Ciclo iterativo do curso C3: a resposta anterior mostra o contexto que faltava no prompt |
+| 25/10 | "Pronto" que não era pronto | A cada revisão pedida pelo autor, apareciam problemas novos; a IA vinha declarando o backend pronto cedo demais, pressionada pelo prazo | O autor questionou; adotamos uma definição de pronto explícita e uma revisão por um agente independente | O critério de "pronto" é do engenheiro, não da IA nem do cronômetro |
+| 25/10 | Revisão independente | 15 achados (6 médios) que escaparam de 3 rodadas anteriores | Corrigidos com TDD; banco trocado para o Neon; CI com PostgreSQL real | Revisão sem o viés de quem escreveu encontra o que as outras não encontram |
+| 25/10 | Banco de teste | O pg-mem não desfaz transações nem reproduz bloqueios: um teste falhava só nele | Validar antes de gravar (funciona nos dois) e rodar a suíte também no PostgreSQL real | Uma ferramenta de teste mais simples que a produção precisa ser complementada, não descartada |
 | 25/10 | Visibilidade | Repositório ainda privado; o curso exige público | Tornado público pelo autor | Conferir o checklist de submissão do curso (C4, Unidade 5.3.1) cedo, não no último dia |
 
 ## Auditoria de segurança do backend (25/10)
@@ -145,6 +149,38 @@ Terceira rodada de revisão, pedida pelo autor antes do frontend. Desta vez o fo
 
 **Aprendizado principal:** o bug 6 é o mais importante. Uma ferramenta de teste que se comporta diferente da produção pode esconder bugs e criar outros. Por isso todo cenário crítico foi conferido também no banco real.
 
+## Revisão independente do backend (25/10)
+
+Quarta rodada, pedida pelo autor depois de perceber um padrão: **a cada revisão, apareciam coisas novas, e o "está pronto" da IA não era confiável**. Até aqui, todas as revisões tinham sido feitas pelo Copilot ou pela própria IA que escreveu o código. Para tirar esse viés, a revisão foi feita por um **agente separado**, sem acesso à conversa, com o prompt P-09: ler requisitos e código, e provar cada suspeita executando.
+
+**Resultado:** nenhum problema alto, 6 médios, 9 baixos. O agente também confirmou de forma independente o que já estava correto (SQL injection, código de acesso, CORS, fuso horário, regras de cálculo, validação da IA, segredos).
+
+| # | Sev. | Achado | Por que as revisões anteriores não pegaram | Decisão e correção |
+| --- | --- | --- | --- | --- |
+| 1 | Média | Toque duplo em "mover para amanhã" criava a atividade 2 vezes | Os testes de concorrência rodavam no banco em memória, que não reproduz bloqueios | Corrigido: troca de status condicional. Teste no PostgreSQL real |
+| 2 | Média | Fixa nova não aparecia num dia que já existia (fluxo principal da HU-09) | Os testes criavam a fixa antes de o dia existir | Corrigido: a fixa entra nos próximos dias abertos, sem duplicar título |
+| 3 | Média | Fechar o dia com "próximo turno" reabria o próprio dia | A reabertura (RN-13) foi criada depois e ninguém testou junto com o fechamento | Corrigido: o fechamento valida todos os destinos antes de gravar |
+| 4 | Média | Dava para excluir atividades de dias passados e a original de uma movida | A RN-13 cobriu edição, mas esqueceu exclusão | Corrigido: só se exclui pendente ou feita, de hoje em diante |
+| 5 | Média | A espera pela IA chegava a 20 s, não 10 s | A biblioteca da IA tenta de novo por padrão; o limite era por tentativa | Corrigido: sem nova tentativa. Teste com servidor que nunca responde |
+| 6 | Média | Sem `NODE_ENV=production`, a API subia **sem código de acesso** | A proteção foi pensada para "produção", não para "qualquer ambiente não local" | Corrigido: falha fechada. `NODE_ENV` vazio conta como produção |
+| 7 | Média | O banco gratuito do Render expira em 30 dias e é apagado | O ADR-002 citava o risco, mas ninguém verificou | Confirmado na documentação oficial. **Banco trocado para o Neon** (ADR-002 revisado) |
+| 8 | Baixa | O documento dizia "fecha às 23h"; o código fecha na primeira abertura do dia seguinte | Diferença entre documento e código | Documento corrigido (RN-07, HU-06, arquitetura 6.2) |
+| 9 | Baixa | Ano 0000, 9999 ou caractere nulo no título geravam erro 500 | A validação aceitava valores que o PostgreSQL recusa | Corrigido: ano entre 2000 e 2100; sem caracteres de controle |
+| 10 | Baixa | Desativar uma fixa não a tirava dos dias futuros já abertos | Mesmo motivo do item 2 | Corrigido: cópias pendentes futuras são removidas |
+| 11 | Baixa | O relatório de hoje chamava a IA a cada abertura, mesmo com o dia fechado | O cache só valia para dias passados | Corrigido: cache também para hoje fechado |
+| 12 | Baixa | A IA podia repetir o "5 de 7" do exemplo num dia de "1 de 3" | O exemplo do prompt tinha números | Corrigido: números conferidos com a contagem real; exemplo sem números (P-07 v3) |
+| 13 | Baixa | Um título com `</dados>` fechava o bloco de dados do prompt | A proteção RNF-09 só testava o texto da instrução | Corrigido: `<` e `>` escapados. Teste do ataque real |
+| 14 | Baixa | Queda de conexão derrubava o servidor; migração não rodava no deploy | Ninguém tinha simulado o primeiro deploy | Corrigido: `pool.on('error')`, migração no `npm start` |
+| 15 | Baixa | Testes de concorrência no banco em memória não provavam nada | Ferramenta de teste diferente da produção | Corrigido: o CI roda a suíte também num PostgreSQL 16 real |
+
+**Testes:** 18 novos, 113 no total, passando no banco em memória e no PostgreSQL real.
+
+**Aprendizados:**
+- **Quem escreve não deve ser o único a revisar.** Quatro bugs reais passaram por três rodadas de revisão feitas pela IA que escreveu o código. Um revisor sem esse contexto achou em minutos.
+- **"Pronto" precisa de critério, não de sensação.** Adotamos uma definição de pronto: nenhum problema alto ou médio aberto, toda regra com teste, CI verde e riscos restantes documentados.
+- **Pedir que a revisão prove executando** separa achado real de opinião: 9 dos 15 itens vieram com teste no banco real.
+- **Risco anotado e não verificado é risco aceito sem saber** (item 7).
+
 ## Decisões de escopo
 
 Para entregar um MVP funcional até 26/10 sem perder a visão do produto, decidi o que fica para depois. Cada corte está documentado em "Fora do escopo" e na "Visão pós-MVP" do `requisitos.md`.
@@ -160,6 +196,6 @@ Para entregar um MVP funcional até 26/10 sem perder a visão do produto, decidi
 
 ## Lições aprendidas (preencher ao final)
 
-- Onde a IA mais ajudou: (preencher)
-- Onde a IA errou ou não entendeu o contexto: sugeriu SQLite sem considerar o deploy; propôs timer e desafios, inadequados para TDAH; não previu injeção de prompt no primeiro desenho do P-07. (revisar e completar)
-- O que eu faria diferente: criar o repositório vazio e configurar o acesso ao GitHub logo no primeiro dia. (revisar e completar)
+- Onde a IA mais ajudou: velocidade para gerar código, testes e documentação rastreável; e, como revisora independente, achar bugs reais e prová-los executando. (revisar e completar)
+- Onde a IA errou ou não entendeu o contexto: sugeriu SQLite sem considerar o deploy; propôs timer e desafios, inadequados para TDAH; não previu injeção de prompt no primeiro desenho do P-07; declarou o backend pronto antes da hora, e revisou o próprio código sem enxergar 4 bugs de concorrência e fluxo. (revisar e completar)
+- O que eu faria diferente: criar o repositório vazio e configurar o acesso ao GitHub logo no primeiro dia; definir o critério de "pronto" e fazer a revisão independente desde o início, não no fim. (revisar e completar)
