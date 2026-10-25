@@ -15,6 +15,7 @@ const app = criarApp({
   ia: criarClienteIA({ apiKey: process.env.LLM_API_KEY, modelo: process.env.LLM_MODEL }),
   origensPermitidas: process.env.FRONTEND_URL,
   codigoDeAcesso: process.env.APP_ACCESS_TOKEN,
+  atrasDeProxy: process.env.NODE_ENV === 'production',
 });
 
 app.listen(porta, () => console.log(`Foco do Dia API em http://localhost:${porta}`));
