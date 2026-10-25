@@ -1,6 +1,6 @@
 # Foco do Dia — Documento de Requisitos
 
-> Versão 0.3 · 23/10/2026 · Autor: Roberto
+> Versão 0.4 · 25/10/2026 · Autor: Roberto (v0.4: RNF-10, RN-13 e RN-14, a partir das revisões do backend)
 > Uso de IA: rascunho gerado com apoio do Claude a partir das decisões do autor; revisado e validado pelo autor. Histórico de revisões em `docs/uso-de-ia.md`.
 
 ---
