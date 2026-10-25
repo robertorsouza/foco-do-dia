@@ -20,6 +20,7 @@ Seu tom é acolhedor, breve e nunca punitivo.
 
 TAREFA: analisar as atividades do dia e dos últimos 7 dias e devolver:
 1. "mensagem": um reconhecimento do dia em no máximo 15 palavras, começando pelo que foi feito.
+   Se citar números, use exatamente os de "contagem" nos dados.
 2. "parecidas": pares de atividades com títulos de sentido parecido que aparecem em turnos
    ou dias diferentes, com uma sugestão curta de como agrupar.
 
@@ -32,7 +33,7 @@ REGRAS:
 - No máximo 3 pares.
 
 FORMATO: responda somente com JSON válido, sem texto antes ou depois, exatamente assim:
-{"mensagem": "Você concluiu 5 de 7 hoje. A manhã foi seu turno mais forte.",
+{"mensagem": "Você concluiu X de Y hoje. A manhã foi seu turno mais forte.",
  "parecidas": [{"a": "Responder e-mails", "b": "Ler e-mails", "sugestao": "Junte os dois na manhã."}]}`;
 
 const respostaEsperada = z.object({
@@ -42,8 +43,13 @@ const respostaEsperada = z.object({
     .max(3),
 });
 
-/** Monta a mensagem do usuário com os dados delimitados. Só título, turno, status, prioridade e data (RNF-04). */
-export function montarMensagem(atividadesDoDia, ultimos7Dias) {
+/**
+ * Monta a mensagem do usuário com os dados delimitados.
+ * Só título, turno, status, prioridade e data (RNF-04), mais a contagem real do dia.
+ * Os sinais < e > dos títulos são escapados no JSON (continua sendo JSON válido),
+ * para que um título como "</dados>" não feche o bloco antes da hora (RNF-09).
+ */
+export function montarMensagem(atividadesDoDia, ultimos7Dias, contagem) {
   const enxugar = (a) => ({
     titulo: a.titulo,
     turno: a.turno,
@@ -51,8 +57,13 @@ export function montarMensagem(atividadesDoDia, ultimos7Dias) {
     prioridade: a.prioridade,
     data: a.data,
   });
-  const dados = { hoje: atividadesDoDia.map(enxugar), ultimos_7_dias: ultimos7Dias.map(enxugar) };
-  return `<dados>\n${JSON.stringify(dados)}\n</dados>`;
+  const dados = {
+    contagem,
+    hoje: atividadesDoDia.map(enxugar),
+    ultimos_7_dias: ultimos7Dias.map(enxugar),
+  };
+  const json = JSON.stringify(dados).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+  return `<dados>\n${json}\n</dados>`;
 }
 
 /** Extrai o primeiro objeto JSON do texto (a IA às vezes envolve em crases). */
@@ -67,18 +78,27 @@ function extrairJson(texto) {
   }
 }
 
+/** Os números citados na mensagem existem na contagem real? (anti-alucinação) */
+function numerosConferem(mensagem, contagem) {
+  if (!contagem) return true;
+  const reais = new Set([contagem.feitas, contagem.total, contagem.percentual].map(String));
+  return (mensagem.match(/\d+/g) ?? []).every((n) => reais.has(n));
+}
+
 /**
  * Valida a resposta da IA e descarta o que não confere com os dados.
- * @returns {{mensagem: string, parecidas: object[]} | null} null = usar o relatório sem IA.
+ * @param {{feitas: number, total: number, percentual?: number}} [contagem]
+ * @returns {{mensagem: string|null, parecidas: object[]} | null} null = usar o relatório sem IA.
  */
-export function validarResposta(texto, titulosConhecidos) {
+export function validarResposta(texto, titulosConhecidos, contagem) {
   const resultado = respostaEsperada.safeParse(extrairJson(texto));
   if (!resultado.success) return null;
 
   const { mensagem, parecidas } = resultado.data;
   const conhecidos = new Set(titulosConhecidos);
+  const confiavel = !PALAVRAS_PROIBIDAS.test(mensagem) && numerosConferem(mensagem, contagem);
   return {
-    mensagem: PALAVRAS_PROIBIDAS.test(mensagem) ? null : mensagem,
+    mensagem: confiavel ? mensagem : null,
     parecidas: parecidas.filter((p) => conhecidos.has(p.a) && conhecidos.has(p.b) && p.a !== p.b),
   };
 }
@@ -87,12 +107,12 @@ export function validarResposta(texto, titulosConhecidos) {
  * Pede as sugestões à IA. Qualquer falha (sem chave, erro, tempo esgotado,
  * resposta inválida) devolve null e o relatório aparece sem elas (RNF-05).
  */
-export async function gerarSugestoesIA(ia, atividadesDoDia, ultimos7Dias) {
+export async function gerarSugestoesIA(ia, atividadesDoDia, ultimos7Dias, contagem) {
   if (!ia) return null;
   try {
-    const texto = await ia.gerar(SISTEMA, montarMensagem(atividadesDoDia, ultimos7Dias));
+    const texto = await ia.gerar(SISTEMA, montarMensagem(atividadesDoDia, ultimos7Dias, contagem));
     const titulos = [...atividadesDoDia, ...ultimos7Dias].map((a) => a.titulo);
-    return validarResposta(texto, titulos);
+    return validarResposta(texto, titulos, contagem);
   } catch (erro) {
     console.warn('[ia] relatório seguirá sem sugestões:', erro.message);
     return null;

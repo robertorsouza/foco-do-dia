@@ -65,7 +65,7 @@ export function criarRotas(ctx) {
   });
 
   router.delete('/atividades/:id', async (req, res) => {
-    await atividades.excluirAtividade(db, validar(e.id, req.params.id));
+    await atividades.excluirAtividade(db, validar(e.id, req.params.id), hoje());
     res.status(204).end();
   });
 
@@ -106,12 +106,12 @@ export function criarRotas(ctx) {
   });
 
   router.post('/fixas', async (req, res) => {
-    res.status(201).json(await repo.inserirFixa(db, validar(e.novaFixa, req.body)));
+    res.status(201).json(await atividades.criarFixa(db, validar(e.novaFixa, req.body), hoje()));
   });
 
   router.delete('/fixas/:id', async (req, res) => {
-    const removida = await repo.desativarFixa(db, validar(e.id, req.params.id));
-    res.status(removida ? 204 : 404).end();
+    await atividades.desativarFixa(db, validar(e.id, req.params.id), hoje());
+    res.status(204).end();
   });
 
   return router;

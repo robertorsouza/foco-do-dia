@@ -136,22 +136,67 @@ export async function listarPorStatus(db, status) {
   return r.rows.map(mapearAtividade);
 }
 
-/** Atualiza só os campos permitidos (lista fixa, não vinda do usuário). */
-export async function atualizarAtividade(db, id, campos) {
+/** Gera "$3, $4, ..." para uma lista de valores a partir de uma posição. */
+const marcadores = (lista, inicio) => lista.map((_, i) => `$${i + inicio}`).join(', ');
+
+/**
+ * Atualiza só os campos permitidos (lista fixa, não vinda do usuário).
+ * Com `statusAtuais`, só atualiza se a atividade ainda estiver num desses status
+ * (evita corrida entre dois toques quase simultâneos). Retorna null se não atualizou.
+ */
+export async function atualizarAtividade(db, id, campos, statusAtuais) {
   const permitidos = ['titulo', 'turno', 'prioridade', 'status'];
   const chaves = permitidos.filter((c) => campos[c] !== undefined);
   if (chaves.length === 0) return buscarAtividade(db, id);
   const atribuicoes = chaves.map((c, i) => `${c} = $${i + 2}`).join(', ');
+  const valores = [id, ...chaves.map((c) => campos[c])];
+  const condicao = statusAtuais
+    ? ` AND status IN (${marcadores(statusAtuais, valores.length + 1)})`
+    : '';
   const r = await db.query(
-    `UPDATE atividades SET ${atribuicoes}, atualizado_em = now() WHERE id = $1 RETURNING ${COLUNAS}`,
-    [id, ...chaves.map((c) => campos[c])],
+    `UPDATE atividades SET ${atribuicoes}, atualizado_em = now()
+     WHERE id = $1${condicao} RETURNING ${COLUNAS}`,
+    [...valores, ...(statusAtuais ?? [])],
   );
-  return mapearAtividade(r.rows[0]);
+  return mapearAtividade(r.rows[0]) ?? null;
 }
 
-export async function excluirAtividade(db, id) {
-  const r = await db.query('DELETE FROM atividades WHERE id = $1 RETURNING id', [id]);
+/**
+ * Troca o status só se o atual for um dos esperados, numa única instrução.
+ * É o que garante que dois toques simultâneos em "mover" não gerem duas cópias:
+ * o segundo encontra o status já trocado e recebe null.
+ */
+export async function transicionarStatus(db, id, de, para) {
+  return atualizarAtividade(db, id, { status: para }, de);
+}
+
+/** Exclui só se o status e a data permitirem (RN-13). Retorna false se não excluiu. */
+export async function excluirAtividade(db, id, { statusPermitidos, aPartirDe }) {
+  const r = await db.query(
+    `DELETE FROM atividades WHERE id = $1 AND data >= $2
+     AND status IN (${marcadores(statusPermitidos, 3)}) RETURNING id`,
+    [id, aPartirDe, ...statusPermitidos],
+  );
   return r.rows.length > 0;
+}
+
+/** Já existe, no dia, uma atividade visível com esse título (sem diferenciar maiúsculas)? */
+export async function existeTituloNoDia(db, data, titulo) {
+  const r = await db.query(
+    `SELECT 1 FROM atividades WHERE data = $1 AND lower(titulo) = lower($2)
+     AND status IN ('pendente', 'feita')`,
+    [data, titulo],
+  );
+  return r.rows.length > 0;
+}
+
+/** Dias abertos a partir de uma data (exclusive). */
+export async function listarDiasAbertosDepoisDe(db, data) {
+  const r = await db.query(
+    'SELECT data FROM dias WHERE data > $1 AND fechado_em IS NULL ORDER BY data',
+    [data],
+  );
+  return r.rows.map((l) => paraData(l.data));
 }
 
 // ---------- Atividades fixas ----------
@@ -177,4 +222,12 @@ export async function desativarFixa(db, id) {
     id,
   ]);
   return r.rows.length > 0;
+}
+
+/** Remove as cópias ainda pendentes de uma fixa nos dias depois de `data`. */
+export async function removerCopiasFuturasDaFixa(db, fixaId, data) {
+  await db.query(
+    "DELETE FROM atividades WHERE fixa_id = $1 AND data > $2 AND status = 'pendente'",
+    [fixaId, data],
+  );
 }

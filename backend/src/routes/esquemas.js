@@ -15,6 +15,10 @@ export const prioridade = z.enum(['normal', 'urgente'], {
 export const data = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use o formato AAAA-MM-DD.')
+  .refine(
+    (v) => Number(v.slice(0, 4)) >= 2000 && Number(v.slice(0, 4)) <= 2100,
+    'Use um ano entre 2000 e 2100.',
+  )
   .refine((v) => new Date(`${v}T12:00:00Z`).toISOString().startsWith(v), 'Essa data não existe.');
 
 /** Identificador: inteiro positivo dentro do limite da coluna INTEGER do PostgreSQL. */
@@ -28,7 +32,10 @@ const titulo = z
   .string()
   .trim()
   .min(1, 'Dê um título para a atividade.')
-  .max(80, 'Use até 80 caracteres.');
+  .max(80, 'Use até 80 caracteres.')
+  // Caracteres de controle (ex.: \u0000) são recusados pelo PostgreSQL.
+  // eslint-disable-next-line no-control-regex
+  .refine((v) => !/[\u0000-\u001F\u007F]/.test(v), 'Use só letras, números e pontuação.');
 
 export const novaAtividade = z.object({
   titulo,

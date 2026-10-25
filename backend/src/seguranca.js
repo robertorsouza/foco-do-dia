@@ -76,13 +76,17 @@ export function exigirCodigoDeAcesso(codigo) {
   };
 }
 
+/** Ambientes em que as proteções podem ficar desligadas, só se declarados explicitamente. */
+export const AMBIENTES_LOCAIS = ['development', 'test'];
+
 /**
- * Impede subir em produção sem as proteções configuradas.
- * Melhor o servidor não iniciar do que iniciar aberto.
+ * Impede subir sem as proteções configuradas. Falha fechada: qualquer ambiente
+ * que não seja declaradamente local (inclusive NODE_ENV vazio, o padrão do
+ * Render) é tratado como produção. Melhor o servidor não iniciar do que iniciar aberto.
  * @param {NodeJS.ProcessEnv} env
  */
 export function verificarConfiguracaoDeProducao(env) {
-  if (env.NODE_ENV !== 'production') return;
+  if (AMBIENTES_LOCAIS.includes(env.NODE_ENV)) return;
   const faltando = ['FRONTEND_URL', 'APP_ACCESS_TOKEN', 'DATABASE_URL'].filter((v) => !env[v]);
   if (faltando.length > 0) {
     throw new Error(`Configuração de produção incompleta. Defina: ${faltando.join(', ')}.`);

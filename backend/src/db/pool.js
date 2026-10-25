@@ -42,8 +42,11 @@ export function configurarSsl(databaseUrl, modo) {
  */
 export function criarPool(databaseUrl, modoSsl) {
   if (!databaseUrl) throw new Error('DATABASE_URL não configurada. Veja o .env.example.');
-  return new pg.Pool({
+  const pool = new pg.Pool({
     connectionString: databaseUrl,
     ssl: configurarSsl(databaseUrl, modoSsl),
   });
+  // Uma conexão ociosa que cai (ex.: o banco reiniciou) não derruba o servidor.
+  pool.on('error', (erro) => console.error('[db] conexão perdida:', erro.message));
+  return pool;
 }
