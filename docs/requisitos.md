@@ -249,3 +249,12 @@ Critérios de aceitação no padrão **Gherkin / BDD** (Dado / Quando / Então =
 
 **Princípios mantidos:** sem prazo, sem contagem de dias, sem alertas. Possível papel futuro da IA: só quando o usuário pedir, ajudar a desdobrar uma ideia em próximos passos.
 
+
+### Tela de Fixas — decisão do autor (25/10)
+
+**No MVP:** a API já cria, lista e desativa atividades fixas, e o relatório do dia sugere torná-las fixas (RN-08). A aba **Fixas** do app, porém, mostra uma tela explicativa com a chamada "Próxima versão", em vez da gestão completa. Motivo: priorizar no prazo as telas do fluxo principal (turnos, alerta, fechamento, relatório).
+
+**Na próxima versão:**
+- ver e editar todas as fixas num só lugar;
+- escolher em quais dias da semana cada uma aparece;
+- pausar uma fixa (por exemplo, nas férias) sem apagar.
