@@ -232,6 +232,36 @@ certeza; diga "sem problemas" quando não houver.
 
 **Versão 2 (PR #3).** Acrescentada a restrição *"Considere o contexto de implantação: plano gratuito do Render, com uma única instância"*, porque no PR #2 o Copilot classificou como grave um risco de escala que não existe nesse cenário. Com o contexto completo, a revisão veio calibrada: 1 item médio aceito, 1 baixo aceito em parte, 3 pontos "sem problemas". Exemplo do ciclo esboço → teste → avaliação → refinamento (curso C3, Unidade 2).
 
+**Versão 3 (PR #8, frontend).** As perguntas específicas mudaram para o frontend: se a tela respeita as regras do backend, se os popups Sim/Não estão onde não dá para desfazer, segurança no navegador (XSS, código salvo no aparelho, CSP), acessibilidade e o tom acolhedor para TDAH. Mantidas as restrições de contexto (Render gratuito, 1 instância, 1 usuário).
+
+```
+CONTEXTO: Pull Request #8 do Foco do Dia: frontend em React 19 + Tailwind 4 (Vite), planner para
+pessoas com TDAH. Backend já revisado (Node + Express + PostgreSQL). Regras em docs/requisitos.md;
+jornadas com o que pode e o que não pode em docs/jornadas.md. Implantação: Vercel (frontend),
+Render gratuito com uma única instância (API) e um único usuário protegido por código de acesso.
+OBJETIVO: revisão de QA antes do merge:
+(1) jornadas: cada jornada J1–J9 de docs/jornadas.md está implementada como descrita? alguma opção
+aparece quando a API recusaria (ex.: mover atividade feita, "próximo turno" da manhã ao fechar)?
+(2) confirmações: excluir, deixar de lado, fechar o dia e tornar fixa só acontecem depois do "Sim"?
+(3) erros: sem rede, código recusado (401), muitas tentativas (429) e servidor lento são tratados
+sem tela quebrada e com a mensagem da API?
+(4) segurança no navegador: algum título é renderizado como HTML? o código de acesso fica só no
+localStorage e só vai no cabeçalho Authorization? a CSP do frontend/vercel.json bloqueia algo de que
+o app precisa?
+(5) testes: cada jornada tem teste? algum teste passaria com o código errado?
+(6) textos: português, curtos, acolhedores, sem tom punitivo nem imposição?
+(7) acessibilidade básica: botões com nome, popups com role="dialog", foco e tecla Esc.
+ESTILO: revisor de QA sênior de frontend, cita arquivo e linha.
+TOM: técnico e direto, sem elogios genéricos.
+AUDIÊNCIA: autor é product designer aprendendo engenharia; explique cada problema em uma frase simples.
+RESPOSTA: tabela (#, arquivo:linha, problema, severidade, como reproduzir, sugestão), no máximo 8
+itens; depois uma lista "verificado e sem problemas"; no final "Veredito: pode fazer merge" ou
+"Veredito: corrigir antes do merge", com o motivo.
+RESTRIÇÕES: só o código e os testes deste PR; não invente; marque "a confirmar" quando não tiver
+certeza; diga "sem problemas" quando não houver. Considere o contexto de implantação acima: não
+classifique como grave um risco de escala, de vários usuários ou de SEO, que não se aplica ao MVP.
+```
+
 ---
 
 ### P-09 · Revisão independente de código · *persona + escopo fechado + verificação por execução*
