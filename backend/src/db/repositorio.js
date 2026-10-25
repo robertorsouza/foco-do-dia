@@ -41,8 +41,15 @@ export async function emTransacao(db, trabalho) {
 
 // ---------- Dias ----------
 
-/** Cria o dia se ainda não existir. Retorna true se criou agora. */
+/**
+ * Cria o dia se ainda não existir. Retorna true se criou agora.
+ * Consulta antes de inserir: o banco em memória dos testes (pg-mem) devolve a
+ * linha mesmo quando o ON CONFLICT ignora a inserção, ao contrário do PostgreSQL.
+ * O ON CONFLICT continua protegendo contra duas criações simultâneas.
+ */
 export async function criarDiaSeNaoExiste(db, data) {
+  const existe = await db.query('SELECT 1 FROM dias WHERE data = $1', [data]);
+  if (existe.rows.length > 0) return false;
   const r = await db.query(
     'INSERT INTO dias (data) VALUES ($1) ON CONFLICT (data) DO NOTHING RETURNING data',
     [data],
@@ -65,8 +72,24 @@ export async function listarDiasAbertosAntesDe(db, data) {
   return r.rows.map((l) => paraData(l.data));
 }
 
-export async function marcarDiaFechado(db, data) {
-  await db.query('UPDATE dias SET fechado_em = now() WHERE data = $1', [data]);
+/**
+ * Marca o dia como fechado de forma atômica: só um processo consegue.
+ * Retorna false se o dia já estava fechado (outra requisição chegou antes).
+ */
+export async function reivindicarFechamento(db, data) {
+  const r = await db.query(
+    'UPDATE dias SET fechado_em = now() WHERE data = $1 AND fechado_em IS NULL RETURNING data',
+    [data],
+  );
+  return r.rows.length > 0;
+}
+
+/** Reabre um dia fechado (e descarta o cache de sugestões, que ficou desatualizado). */
+export async function reabrirDia(db, data) {
+  await db.query(
+    'UPDATE dias SET fechado_em = NULL, sugestoes_ia = NULL WHERE data = $1 AND fechado_em IS NOT NULL',
+    [data],
+  );
 }
 
 export async function salvarSugestoesIA(db, data, sugestoes) {

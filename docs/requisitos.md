@@ -1,6 +1,6 @@
 # Foco do Dia — Documento de Requisitos
 
-> Versão 0.3 · 23/10/2026 · Autor: Roberto
+> Versão 0.4 · 25/10/2026 · Autor: Roberto (v0.4: RNF-10, RN-13 e RN-14, a partir das revisões do backend)
 > Uso de IA: rascunho gerado com apoio do Claude a partir das decisões do autor; revisado e validado pelo autor. Histórico de revisões em `docs/uso-de-ia.md`.
 
 ---
@@ -83,6 +83,8 @@ Encaixa no exemplo "Micro-API de gerenciamento de tarefas" sugerido pelo curso, 
 | RN-10 | Atividades urgentes aparecem no topo do turno e são citadas primeiro nos alertas. |
 | RN-11 | Destino sugerido ao fechar o dia: urgente → amanhã de manhã; normal → amanhã, no mesmo turno. |
 | RN-12 | A seção "Atividades pendentes" é separada dos turnos diários e não altera o checklist de nenhum dia. Cada atividade nela mostra desde quando está pendente e quantos dias ficou assim. Ela só sai da seção quando o usuário define um destino. |
+| RN-13 | Adicionar, mover ou desmarcar uma atividade em um dia de hoje já fechado reabre esse dia, para que a nova pendência passe pelo fechamento normal. Atividades de dias passados não podem ser editadas; para retomá-las, usa-se a seção "Atividades pendentes". |
+| RN-14 | Atividades só são criadas para hoje ou datas futuras. Só se fecha hoje ou dias anteriores. "Próximo turno" não vale para atividades em aberto: para elas, escolhe-se amanhã ou outra data. |
 
 ---
 
@@ -179,7 +181,7 @@ Critérios de aceitação no padrão **Gherkin / BDD** (Dado / Quando / Então =
 | RNF-10 | Segurança | A API publicada exige um código de acesso (APP_ACCESS_TOKEN), digitado uma vez no app; CORS aceita só o domínio do frontend; a conexão com o banco verifica o certificado TLS. Em produção, o servidor não sobe sem essas proteções. |
 | RNF-05 | Confiabilidade | O app funciona normalmente se a IA falhar; só as sugestões ficam indisponíveis. |
 | RNF-06 | Eficiência de desempenho | O relatório com sugestões carrega em até 10 segundos; as ações do checklist respondem em até 1 segundo. |
-| RNF-07 | Manutenibilidade | Backend em camadas (rotas, serviços, banco), com testes automatizados cobrindo as regras de negócio RN-01 a RN-12. |
+| RNF-07 | Manutenibilidade | Backend em camadas (rotas, serviços, banco), com testes automatizados cobrindo as regras de negócio RN-01 a RN-14. |
 | RNF-08 | Compatibilidade | Notificações funcionam nos navegadores Chrome e Edge atuais, com o app aberto. |
 
 ---

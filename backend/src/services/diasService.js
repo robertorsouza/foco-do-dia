@@ -12,8 +12,12 @@ const VISIVEIS_NOS_TURNOS = ['pendente', 'feita'];
 /**
  * Garante que o dia exista. Ao criar um dia de hoje em diante,
  * inclui as atividades fixas ativas (HU-09).
+ *
+ * Em escritas (nova atividade ou atividade movida para cá), um dia de hoje em
+ * diante que já estava fechado é reaberto: assim a nova pendência não fica
+ * presa e passa pelo fechamento normal (RN-07).
  */
-export async function garantirDia(db, data, hoje) {
+export async function garantirDia(db, data, hoje, { paraEscrita = false } = {}) {
   const criado = await repo.criarDiaSeNaoExiste(db, data);
   if (criado && data >= hoje) {
     const fixas = await repo.listarFixasAtivas(db);
@@ -21,6 +25,7 @@ export async function garantirDia(db, data, hoje) {
       await repo.inserirAtividade(db, { data, ...fixa, fixaId: fixa.id });
     }
   }
+  if (!criado && paraEscrita && data >= hoje) await repo.reabrirDia(db, data);
 }
 
 /** Progresso "x de y" de uma lista de atividades visíveis. */
@@ -75,11 +80,16 @@ export async function sugestoesDeFechamento(db, data) {
  * @param {Array<{id:number, destino:string, data?:string, turno?:string}>} destinos
  */
 export async function fecharDia(db, data, destinos, hoje) {
+  if (data > hoje) throw new ErroDeNegocio(422, 'Só dá para fechar hoje ou dias anteriores.');
   const dia = await repo.buscarDia(db, data);
   if (!dia) throw new ErroDeNegocio(404, 'Esse dia ainda não tem atividades.');
-  if (dia.fechado_em) throw new ErroDeNegocio(409, 'Esse dia já foi fechado.');
 
   return repo.emTransacao(db, async (tx) => {
+    // Reivindica o fechamento primeiro: se duas requisições chegarem juntas,
+    // só uma fecha o dia e a outra recebe 409.
+    if (!(await repo.reivindicarFechamento(tx, data))) {
+      throw new ErroDeNegocio(409, 'Esse dia já foi fechado.');
+    }
     const pendentes = (await repo.listarAtividadesDoDia(tx, data)).filter(
       (a) => a.status === 'pendente',
     );
@@ -96,7 +106,6 @@ export async function fecharDia(db, data, destinos, hoje) {
         resumo.em_aberto += 1;
       }
     }
-    await repo.marcarDiaFechado(tx, data);
     return resumo;
   });
 }
@@ -109,7 +118,14 @@ export async function fecharDia(db, data, destinos, hoje) {
 export async function fecharDiasAnteriores(db, hoje) {
   const abertos = await repo.listarDiasAbertosAntesDe(db, hoje);
   for (const data of abertos) {
-    await fecharDia(db, data, [], hoje);
+    try {
+      await fecharDia(db, data, [], hoje);
+    } catch (erro) {
+      // Outra requisição fechou o mesmo dia ao mesmo tempo: o resultado é o mesmo.
+      // Qualquer outro erro continua sendo lançado.
+      if (!(erro instanceof ErroDeNegocio && erro.status === 409)) throw erro;
+      console.info(`[dias] ${data} já tinha sido fechado por outra requisição.`);
+    }
   }
   return abertos.length;
 }

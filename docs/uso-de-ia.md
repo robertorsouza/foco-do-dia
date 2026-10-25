@@ -66,6 +66,8 @@ Formato do laboratório do curso C4 (Unidade III). Para os trechos mais importan
 | `tests/`: limite geral sem teste | Copilot Chat (P-08): o limite de 300 requisições não tinha teste; uma mudança acidental passaria no CI | **Aceitei.** 2 testes: uso real do frontend não é bloqueado; a 301ª requisição recebe 429 | Testes |
 | `app.js`: Helmet/CSP | Copilot Chat (P-08), "a confirmar": a CSP poderia bloquear scripts se a API servisse HTML. Sugeriu desligar a CSP | **Discordei.** A API só devolve JSON e o frontend está em outra origem. Desligar a CSP reduziria a segurança sem ganho | Segurança |
 | Veredito do Copilot | "Corrigir antes do merge", baseado principalmente no item de severidade alta | **Ajustei o veredito.** O item principal não se aplica ao cenário real; após o teste do item 2, pode fazer merge | Processo |
+| `tests/regras-de-borda.test.js`: concorrência | Copilot Chat (P-08, PR #3), média: o teste de corrida usava `GET /hoje` e não o botão "Fechar o dia"; um bug só no endpoint de fechamento passaria | **Aceitei.** Novo teste dispara dois fechamentos manuais em paralelo: um 200, um 409 e a atividade em aberto uma única vez | Testes |
+| `diasService.js`: conflito ignorado em silêncio | Copilot Chat (P-08, PR #3), baixa, "a confirmar": ignorar o 409 poderia esconder erros; sugeriu log e devolver `conflito=true` | **Aceitei em parte.** Adicionei o registro no log; outros erros já eram relançados. Não criei o `conflito=true`, porque nenhuma tela usa essa informação | Resiliência |
 | `db/pool.js` e IA | Na primeira versão, a própria IA que gerou o código (Claude) não apontou esses 3 riscos | Mantive a dupla verificação: uma IA não revisa o próprio código | Processo |
 
 Checklist de revisão aplicado a cada trecho (curso C4, Unidade 3.3.1):
@@ -97,6 +99,8 @@ Registro do que aconteceu ao colocar o projeto para funcionar de verdade (GitHub
 | 25/10 | Revisão de segurança | O Copilot encontrou 3 riscos reais (TLS, CORS, autenticação) que passaram pelos 64 testes e pela IA que gerou o código | Corrigidos com 13 testes novos (77 no total) | Um segundo revisor, de outra ferramenta, enxerga o que o autor não vê. Testes verificam o que foi pensado; revisão encontra o que não foi |
 | 25/10 | Auditoria de segurança | 6 pontos novos apareceram ao atacar o servidor real (datas inválidas, id gigante, corpo grande, mensagens, cabeçalhos, limite de tentativas) | Corrigidos com 7 testes (84 no total) | Testar com o sistema rodando, como um atacante faria, complementa testes unitários e revisão de código |
 | 25/10 | Revisão de QA do PR #2 | O Copilot recomendou não fazer merge por um risco de escala que não existe no plano gratuito | Aceitei 1 de 3 itens e documentei a premissa dos outros 2 | Uma revisão de IA não conhece o contexto de negócio e de infraestrutura. A decisão final é do engenheiro, com justificativa |
+| 25/10 | Revisão da lógica | 6 bugs de regra de negócio, incluindo uma diferença entre o banco de teste (pg-mem) e o PostgreSQL real | Corrigidos com TDD; 94 testes; conferido no banco real | Revisões de segurança não acham bugs de lógica, e vice-versa. E o ambiente de teste precisa se comportar como a produção |
+| 25/10 | Prompt de QA refinado | No PR #2, o Copilot superestimou um risco de escala por não saber que o Render gratuito usa uma instância | Acrescentei essa restrição ao P-08 no PR #3; a resposta veio calibrada e com veredito "pode fazer merge" | Ciclo iterativo do curso C3: a resposta anterior mostra o contexto que faltava no prompt |
 | 25/10 | Visibilidade | Repositório ainda privado; o curso exige público | Tornado público pelo autor | Conferir o checklist de submissão do curso (C4, Unidade 5.3.1) cedo, não no último dia |
 
 ## Auditoria de segurança do backend (25/10)
@@ -123,6 +127,23 @@ Depois de aplicar a revisão do Copilot, pedi uma segunda verificação completa
 **Resultado:** 7 testes novos, 84 no total, CI verde. Os erros 500 não eram falhas de segurança graves, mas um 500 indica uma entrada que o sistema não previu. Depois da correção, toda entrada malformada recebe uma resposta clara.
 
 **Aprendizado:** revisões diferentes acham coisas diferentes. Os testes automáticos validaram as regras de negócio; o Copilot achou 3 falhas de configuração; os ataques simulados acharam 6 casos de borda. Nenhuma camada sozinha encontrou tudo.
+
+## Revisão completa da lógica do backend (25/10)
+
+Terceira rodada de revisão, pedida pelo autor antes do frontend. Desta vez o foco foi a **lógica de negócio**: percorrer cada regra procurando caminhos que os testes não cobriam. Método: TDD — primeiro um teste que prova o bug (red), depois a correção (green).
+
+| # | Bug encontrado | Cenário real | Correção | Regra |
+| --- | --- | --- | --- | --- |
+| 1 | Atividade adicionada depois de fechar o dia ficava presa como pendente para sempre | Fecho o dia às 21h e lembro de mais uma tarefa | O dia reabre; no dia seguinte, ela vai para "Atividades pendentes" | RN-13 |
+| 2 | Desmarcar como feita uma atividade de dia passado criava pendência fora do fluxo | Mexo no histórico de ontem por engano | Dias passados não são editáveis (409, com orientação) | RN-13 |
+| 3 | "Próximo turno" a partir da seção de pendências mandava a atividade para o passado | Retomo uma pendência de 3 dias atrás | Recusado com orientação: "escolha amanhã ou outra data" | RN-14 |
+| 4 | Duas requisições na virada do dia podiam fechar o mesmo dia ao mesmo tempo e devolver erro | Celular e computador abertos à meia-noite | Fechamento atômico no banco: um fecha, o outro ignora | RN-07 |
+| 5 | Dava para criar atividade em data passada e fechar dia futuro | Erro de digitação na data | Recusado com 422 | RN-14 |
+| 6 | **Os testes não refletiam o banco real:** o banco em memória (pg-mem) responde diferente do PostgreSQL ao `ON CONFLICT ... RETURNING`. Nos testes, cada visita a um dia futuro duplicava as atividades fixas; em produção, a reabertura do dia nunca aconteceria | Descoberto ao investigar por que a correção do bug 1 não funcionava nos testes; confirmado comparando os dois bancos | Consulta antes de inserir, o que funciona igual nos dois | HU-09 |
+
+**Resultado:** 8 testes novos, 94 no total; cenários conferidos também no PostgreSQL real (reabertura do dia, fechamento em paralelo: um 200 e um 409, nenhum erro 500).
+
+**Aprendizado principal:** o bug 6 é o mais importante. Uma ferramenta de teste que se comporta diferente da produção pode esconder bugs e criar outros. Por isso todo cenário crítico foi conferido também no banco real.
 
 ## Decisões de escopo
 

@@ -1,7 +1,7 @@
 # Foco do Dia — Arquitetura
 
-> Versão 0.1 · 23/10/2026 · Autor: Roberto
-> Uso de IA: proposta elaborada com apoio do Claude a partir de `docs/requisitos.md` (v0.2); revisada e validada pelo autor. Decisões registradas em `docs/adr/`.
+> Versão 0.2 · 25/10/2026 · Autor: Roberto (v0.2: segurança, limites e fechamento atômico, a partir das revisões do backend)
+> Uso de IA: proposta elaborada com apoio do Claude a partir de `docs/requisitos.md`; revisada e validada pelo autor. Decisões registradas em `docs/adr/`.
 
 ---
 
@@ -105,10 +105,11 @@ erDiagram
 
 ## 5. Contrato da API (endpoints)
 
-Base: `/api`. Todas as respostas em JSON.
+Base: `/api`. Todas as respostas em JSON. Todas as rotas, exceto `/health`, exigem o cabeçalho `Authorization: Bearer <código de acesso>` (RNF-10).
 
 | Método | Endpoint | O que faz | História |
 | --- | --- | --- | --- |
+| GET | `/hoje` | Atalho para o dia atual, no fuso do usuário | HU-01 |
 | GET | `/dias/:data` | Dia com atividades por turno (urgentes no topo) | HU-01, HU-08 |
 | POST | `/atividades` | Cria atividade (título, turno, prioridade) | HU-01 |
 | PATCH | `/atividades/:id` | Edita título, turno, prioridade ou alterna feita/pendente | HU-02, HU-03 |
@@ -122,6 +123,7 @@ Base: `/api`. Todas as respostas em JSON.
 | GET | `/pendencias` | Seção "Atividades pendentes": itens `em_aberto` com data de origem e dias pendentes (fora dos turnos) | HU-11 |
 | GET | `/relatorios/semanal?inicio=AAAA-MM-DD` | % por dia e bloco "Atividades pendentes" com os dias em que ficaram pendentes | HU-11 |
 | GET / POST | `/fixas` | Lista e cria atividades fixas | HU-09 |
+| DELETE | `/fixas/:id` | Desativa uma atividade fixa | HU-09 |
 | GET | `/health` | Verifica se a API está no ar | — |
 
 ## 6. Fluxos principais
@@ -151,7 +153,7 @@ O frontend só pergunta; quem decide se deve alertar é o backend. Assim a regra
 1. O usuário toca em "Fechar o dia". O frontend chama `GET /dias/:data/sugestoes-fechamento`.
 2. Cada pendência vem com o destino sugerido já marcado (RN-11).
 3. O usuário confirma tudo, ajusta uma por uma ou escolhe "decidir depois".
-4. O frontend chama `POST /dias/:data/fechar`. O backend aplica os destinos, marca o resto como `em_aberto` e registra `fechado_em`. Atividades `em_aberto` deixam de aparecer nos turnos e passam a ser listadas só em `GET /pendencias` (RN-12).
+4. O frontend chama `POST /dias/:data/fechar`. O backend aplica os destinos, marca o resto como `em_aberto` e registra `fechado_em`. Atividades `em_aberto` deixam de aparecer nos turnos e passam a ser listadas só em `GET /pendencias` (RN-12). O fechamento é atômico: o dia é marcado como fechado no início da transação, com `WHERE fechado_em IS NULL`, então duas requisições simultâneas não fecham o mesmo dia duas vezes. Uma escrita posterior num dia de hoje já fechado reabre o dia (RN-13).
 
 **Fechamento automático às 23h, sem servidor agendado:** o plano gratuito do Render desliga o backend quando não há uso, então não dá para depender de uma tarefa agendada. Usamos **fechamento preguiçoso**: na primeira requisição de um novo dia, o backend verifica se o dia anterior ficou aberto e o fecha aplicando a mesma regra do passo 4. O resultado para o usuário é o mesmo.
 

@@ -226,6 +226,8 @@ certeza; diga "sem problemas" quando não houver.
 
 **Resultado:** 3 itens. 1 aceito (teste do limite geral), 2 com discordância fundamentada (premissa de 1 instância; CSP não afeta uma API JSON). Ver `uso-de-ia.md`.
 
+**Versão 2 (PR #3).** Acrescentada a restrição *"Considere o contexto de implantação: plano gratuito do Render, com uma única instância"*, porque no PR #2 o Copilot classificou como grave um risco de escala que não existe nesse cenário. Com o contexto completo, a revisão veio calibrada: 1 item médio aceito, 1 baixo aceito em parte, 3 pontos "sem problemas". Exemplo do ciclo esboço → teste → avaliação → refinamento (curso C3, Unidade 2).
+
 ---
 
 ## 5. Checklist anti-alucinação (curso C3, Unidade 2.3)
