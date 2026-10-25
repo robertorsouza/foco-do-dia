@@ -1,0 +1,29 @@
+# Integração contínua: a cada push e Pull Request, roda lint, formatação e testes.
+# Nenhum código (escrito por pessoa ou por IA) entra na main sem passar aqui.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Lint (inclui regras de segurança)
+        run: npm run lint
+      - name: Formatação
+        run: npx prettier --check .
+      - name: Testes com cobertura mínima
+        run: npm run coverage

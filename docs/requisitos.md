@@ -176,6 +176,7 @@ Critérios de aceitação no padrão **Gherkin / BDD** (Dado / Quando / Então =
 | RNF-03 | Segurança | A chave da API de IA fica apenas no backend, em variável de ambiente. Nunca no frontend nem no GitHub. |
 | RNF-04 | Privacidade | A IA recebe apenas títulos, status e prioridade das atividades, sem dados pessoais do usuário. |
 | RNF-09 | Segurança | Proteção contra injeção de prompt (OWASP Top 10 para LLM): textos do usuário são enviados à IA como dados, nunca como instruções, e a resposta da IA é validada antes de ser exibida. |
+| RNF-10 | Segurança | A API publicada exige um código de acesso (APP_ACCESS_TOKEN), digitado uma vez no app; CORS aceita só o domínio do frontend; a conexão com o banco verifica o certificado TLS. Em produção, o servidor não sobe sem essas proteções. |
 | RNF-05 | Confiabilidade | O app funciona normalmente se a IA falhar; só as sugestões ficam indisponíveis. |
 | RNF-06 | Eficiência de desempenho | O relatório com sugestões carrega em até 10 segundos; as ações do checklist respondem em até 1 segundo. |
 | RNF-07 | Manutenibilidade | Backend em camadas (rotas, serviços, banco), com testes automatizados cobrindo as regras de negócio RN-01 a RN-12. |
@@ -185,7 +186,7 @@ Critérios de aceitação no padrão **Gherkin / BDD** (Dado / Quando / Então =
 
 ## 7. Fora do escopo do MVP
 
-- Login e múltiplos usuários (o MVP atende um usuário).
+- Login e múltiplos usuários (o MVP atende um usuário; o acesso é protegido por código, RNF-10).
 - Notificação no celular com o app fechado (push).
 - Horários de turno personalizáveis.
 - IA preditiva que aprende o horário de cada pessoa.
