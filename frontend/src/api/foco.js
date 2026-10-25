@@ -17,6 +17,7 @@ export function criarApi(http) {
     excluirAtividade: (id) => http.delete(`/atividades/${id}`),
     moverAtividade: (id, destino) => http.post(`/atividades/${id}/mover`, destino),
     deixarDeLado: (id) => http.post(`/atividades/${id}/deixar-de-lado`),
+    desfazerMovimento: (idDaCopia) => http.post(`/atividades/${idDaCopia}/desfazer-movimento`),
 
     pendencias: () => http.get('/pendencias'),
     alertaDeAgora: () => http.get('/alertas/agora'),

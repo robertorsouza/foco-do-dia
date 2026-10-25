@@ -8,17 +8,27 @@ import { Botao } from './ui.jsx';
 export function Popup({ titulo, children, aoFechar, embaixo = false }) {
   const idTitulo = useId();
   const caixa = useRef(null);
+  // Guarda a função mais recente sem refazer o efeito a cada renderização:
+  // o foco é posicionado uma vez só, ao abrir.
+  const fecharAtual = useRef(aoFechar);
+  useEffect(() => {
+    fecharAtual.current = aoFechar;
+  });
 
   useEffect(() => {
     const anterior = document.activeElement;
-    caixa.current?.querySelector('button, input')?.focus();
-    const aoTeclar = (e) => e.key === 'Escape' && aoFechar();
+    // Foco no elemento marcado (em confirmações, o "não"), senão no primeiro botão.
+    const alvo =
+      caixa.current?.querySelector('[data-foco-inicial]') ??
+      caixa.current?.querySelector('button, input');
+    alvo?.focus();
+    const aoTeclar = (e) => e.key === 'Escape' && fecharAtual.current();
     document.addEventListener('keydown', aoTeclar);
     return () => {
       document.removeEventListener('keydown', aoTeclar);
       anterior?.focus?.();
     };
-  }, [aoFechar]);
+  }, []);
 
   return (
     <div
@@ -59,7 +69,8 @@ export function Confirmar({ titulo, texto, sim, nao, aoConfirmar, aoFechar, ocup
         <Botao grande largo onClick={aoConfirmar} disabled={ocupado}>
           {sim}
         </Botao>
-        <Botao estilo="fantasma" largo onClick={aoFechar}>
+        {/* Foco começa no "não": um Enter sem querer não exclui nem fecha o dia. */}
+        <Botao estilo="fantasma" largo onClick={aoFechar} data-foco-inicial>
           {nao}
         </Botao>
       </div>

@@ -41,11 +41,14 @@ export function Hoje({ api, irPara, agora = () => new Date() }) {
   const fechar = useCallback(() => setPopup(null), []);
 
   /** Executa uma ação; erros da API viram aviso com a mensagem dela. */
-  async function agir(acao, textoDeSucesso) {
+  // `sucesso` é o texto do aviso ou uma função que recebe o resultado e devolve
+  // [texto, ação do aviso], usada para oferecer "Desfazer".
+  async function agir(acao, sucesso) {
     setPopup(null);
     try {
-      await acao();
-      if (textoDeSucesso) avisar(textoDeSucesso);
+      const resultado = await acao();
+      if (typeof sucesso === 'function') avisar(...sucesso(resultado));
+      else if (sucesso) avisar(sucesso);
       return true;
     } catch (falha) {
       avisar(falha.message);
@@ -95,14 +98,32 @@ export function Hoje({ api, irPara, agora = () => new Date() }) {
   const vazio = total === 0 && !dia.fechado;
   const minutos = agora().getHours() * 60 + agora().getMinutes();
 
-  const marcar = (a) =>
-    agir(() => api.editarAtividade(a.id, { status: a.status === 'feita' ? 'pendente' : 'feita' }));
+  const marcar = (a) => {
+    const feita = a.status !== 'feita';
+    return agir(
+      () => api.editarAtividade(a.id, { status: feita ? 'feita' : 'pendente' }),
+      feita ? 'Feita. Toque de novo para desmarcar.' : 'Voltou para pendente.',
+    );
+  };
+
+  /** Mover não pede confirmação: o aviso traz "Desfazer" por alguns segundos (J3). */
+  const desfazer = (copias) => ({
+    rotulo: 'Desfazer',
+    aoTocar: () =>
+      agir(
+        () => Promise.all(copias.map((c) => api.desfazerMovimento(c.id))),
+        copias.length === 1 ? 'Voltou para onde estava.' : 'Voltaram para onde estavam.',
+      ),
+  });
 
   function escolherNoMenu(chave) {
     const a = popup.atividade;
     if (chave === 'marcar' || chave === 'desmarcar') return marcar(a);
     if (chave === 'proximo_turno' || chave === 'amanha') {
-      return agir(() => api.moverAtividade(a.id, { destino: chave }), avisoMovida(chave, a.turno));
+      return agir(
+        () => api.moverAtividade(a.id, { destino: chave }),
+        (copia) => [avisoMovida(chave, a.turno), desfazer([copia])],
+      );
     }
     setPopup({ tipo: chave, atividade: a });
   }
@@ -113,7 +134,7 @@ export function Hoje({ api, irPara, agora = () => new Date() }) {
     dispensarAlerta(alerta.data, alerta.turno);
     await agir(
       () => Promise.all(lista.map((a) => api.moverAtividade(a.id, { destino: 'proximo_turno' }))),
-      avisoMovida('proximo_turno', alerta.turno),
+      (copias) => [avisoMovida('proximo_turno', alerta.turno), desfazer(copias)],
     );
   }
 
