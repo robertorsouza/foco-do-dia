@@ -177,6 +177,9 @@ O frontend só pergunta; quem decide se deve alertar é o backend. Assim a regra
 | Código de acesso | Toda rota em `/api` (exceto `/api/health`) exige `Authorization: Bearer <APP_ACCESS_TOKEN>`. Comparação em tempo constante |
 | TLS do banco | Certificado verificado por padrão fora do localhost (`DB_SSL=verify`) |
 | Produção | O servidor não inicia sem `FRONTEND_URL`, `APP_ACCESS_TOKEN` e `DATABASE_URL` |
+| Limite de requisições | 300 por IP a cada 15 min; 10 tentativas erradas de código de acesso por IP a cada 15 min |
+| Cabeçalhos HTTP | Helmet: `nosniff`, HSTS, CSP, sem `X-Powered-By` |
+| Entradas | Datas que não existem, identificadores fora do limite e corpos acima de 20 KB são recusados com 422/413, nunca 500 |
 | Validação de esquemas (curso C4, Unidade 3.1.1) | **Zod** define o formato de cada entrada e saída da API (o equivalente ao Pydantic em Node). O mesmo esquema valida o JSON devolvido pela IA no relatório |
 | XSS | O React escapa o texto por padrão; títulos de atividades nunca são renderizados como HTML |
 | Consultas ao banco | Sempre parametrizadas na camada `db/`: o comando SQL é fixo e o valor digitado pelo usuário entra separado, como dado. Protege contra SQL injection |

@@ -99,3 +99,69 @@ describe('Produção não sobe aberta', () => {
     expect(() => verificarConfiguracaoDeProducao({ NODE_ENV: 'development' })).not.toThrow();
   });
 });
+
+// Auditoria de segurança complementar (testes de ataque com o servidor rodando).
+describe('Auditoria: entradas malformadas não viram erro 500', () => {
+  async function ambiente() {
+    const amb = criarAmbiente({ agora: AGORA });
+    await amb.pronto();
+    return amb;
+  }
+
+  it('data que não existe no calendário responde 422', async () => {
+    const amb = await ambiente();
+    const r = await amb.api().get('/api/dias/2026-02-31');
+    expect(r.status).toBe(422);
+    expect(r.body.erro).toBe('Essa data não existe.');
+  });
+
+  it('identificador gigante responde 422', async () => {
+    const amb = await ambiente();
+    expect((await amb.api().delete('/api/atividades/99999999999')).status).toBe(422);
+  });
+
+  it('corpo grande demais responde 413', async () => {
+    const amb = await ambiente();
+    const r = await amb
+      .api()
+      .post('/api/atividades')
+      .send({ titulo: 'a'.repeat(50_000), turno: 'manha' });
+    expect(r.status).toBe(413);
+  });
+
+  it('mensagens de validação em português e acolhedoras', async () => {
+    const amb = await ambiente();
+    const r = await amb.api().post('/api/atividades').send({ titulo: 'x', turno: 'madrugada' });
+    expect(r.body.erro).toBe('Escolha manhã, tarde ou noite.');
+  });
+
+  it('campos extras são ignorados: não dá para criar já como feita', async () => {
+    const amb = await ambiente();
+    const r = await amb
+      .api()
+      .post('/api/atividades')
+      .send({ titulo: 'x', turno: 'manha', status: 'feita', id: 999 });
+    expect(r.body.status).toBe('pendente');
+    expect(r.body.id).not.toBe(999);
+  });
+});
+
+describe('Auditoria: cabeçalhos e limites', () => {
+  it('envia cabeçalhos de segurança HTTP e esconde a tecnologia', async () => {
+    const amb = criarAmbiente({ agora: AGORA });
+    const r = await amb.api().get('/api/health');
+    expect(r.headers['x-content-type-options']).toBe('nosniff');
+    expect(r.headers['strict-transport-security']).toBeDefined();
+    expect(r.headers['x-powered-by']).toBeUndefined();
+  });
+
+  it('bloqueia quem erra o código de acesso muitas vezes', async () => {
+    const amb = criarAmbiente({ agora: AGORA, codigoDeAcesso: 'codigo-secreto-123' });
+    for (let i = 0; i < 10; i++) {
+      await amb.api().get('/api/hoje').set('Authorization', 'Bearer chute');
+    }
+    const r = await amb.api().get('/api/hoje').set('Authorization', 'Bearer codigo-secreto-123');
+    expect(r.status).toBe(429);
+    expect(r.body.erro).toMatch(/Muitas tentativas/);
+  });
+});

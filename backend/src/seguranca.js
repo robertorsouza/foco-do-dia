@@ -9,6 +9,39 @@
  *    código uma vez no app; ele não fica embutido no código do frontend.
  */
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { rateLimit } from 'express-rate-limit';
+
+const QUINZE_MINUTOS = 15 * 60 * 1000;
+
+/**
+ * Limite geral de requisições por IP: protege contra abuso e contra custo
+ * excessivo de IA no relatório. Uso normal fica muito abaixo disso.
+ */
+export function limiteGeral() {
+  return rateLimit({
+    windowMs: QUINZE_MINUTOS,
+    limit: 300,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { erro: 'Muitas requisições. Espere alguns minutos e tente de novo.' },
+  });
+}
+
+/**
+ * Limite de tentativas de código de acesso erradas por IP (contra adivinhação).
+ * Só conta as respostas 401.
+ */
+export function limiteDeTentativas() {
+  return rateLimit({
+    windowMs: QUINZE_MINUTOS,
+    limit: 10,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    requestWasSuccessful: (_req, res) => res.statusCode !== 401,
+    skipSuccessfulRequests: true,
+    message: { erro: 'Muitas tentativas. Espere 15 minutos e tente de novo.' },
+  });
+}
 
 /**
  * Opções de CORS a partir de uma lista separada por vírgulas.
