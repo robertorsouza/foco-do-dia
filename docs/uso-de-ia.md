@@ -69,6 +69,25 @@ Checklist de revisão aplicado a cada trecho (curso C4, Unidade 3.3.1):
 - [ ] Segue os padrões do projeto (nomes claros, funções pequenas, sem repetição, JSDoc)
 - [ ] Testado e passando
 
+## Diário de integração: erros, acertos e aprendizados
+
+Registro do que aconteceu ao colocar o projeto para funcionar de verdade (GitHub, banco, deploy), em ordem. Cada linha separa o que deu errado, como resolvi e o que aprendi.
+
+| Data | Situação | O que deu errado | Como resolvemos | Aprendizado |
+| --- | --- | --- | --- | --- |
+| 23/10 | Escolha do banco | A IA sugeriu SQLite. No plano gratuito do Render os arquivos se apagam a cada reinício, e o banco junto | Troquei por PostgreSQL gerenciado (ADR-002) | Validar o ambiente de deploy antes de fechar a stack. A IA sugere o "padrão", não o que cabe na infraestrutura |
+| 23/10 | Fechamento automático às 23h | O servidor gratuito dorme sem uso, então uma tarefa agendada às 23h não rodaria | Fechamento "preguiçoso": o dia anterior fecha na primeira requisição do dia seguinte | Restrição de infraestrutura muda a arquitetura. Isso virou documentação (arquitetura, seção 6.2) |
+| 24/10 | Ferramentas do curso | O curso usa Python (FastAPI, Pydantic, Pytest); o projeto usa JavaScript | Equivalentes diretos: Express, Zod, Vitest, com justificativa no ADR-001 | Entender o conceito importa mais que a ferramenta. Pydantic e Zod resolvem o mesmo problema |
+| 24/10 | Segurança do prompt do produto | O primeiro desenho do P-07 não tratava injeção de prompt: um título de tarefa poderia conter instruções para a IA | Títulos delimitados como dados, regra no prompt e validação da resposta (RNF-09) | Texto do usuário que chega à IA é entrada não confiável, igual a um formulário |
+| 24/10 | Teste no banco real | Os 63 testes automáticos passavam, mas no teste manual com PostgreSQL real uma atividade movida no mesmo dia contava duas vezes | Corrigido e criado o teste 64 | Teste automático verde não garante tudo. Rodar o sistema de verdade encontra o que ninguém pensou em testar |
+| 24/10 | Acesso ao GitHub (1) | O Claude não enxergava o repositório: a conexão só cobria os repositórios das organizações do CEIA, não a conta pessoal | Instalei o app do Claude na conta pessoal e autorizei o `foco-do-dia` | No GitHub, "autorizar" um app (ele sabe quem eu sou) é diferente de "instalar" (ele acessa meus repositórios) |
+| 25/10 | Acesso ao GitHub (2) | Procurei a permissão nas configurações do repositório, mas ela fica nas configurações da conta | Foto → Settings → Applications → Installed GitHub Apps | Permissões de apps são da conta, não do repositório |
+| 25/10 | Envio do código | O repositório nasceu com um README no GitHub e o código local tinha outro: conflito ao juntar os históricos | `git rebase` sobre o commit inicial, juntando os dois textos do README | Criar o repositório vazio evita conflito; quando acontece, o Git mostra exatamente onde está |
+| 25/10 | Fluxo de Pull Request | Os commits do backend tinham sido feitos direto na `main` | Reorganizei: `main` só com a documentação; backend na branch `feat/backend`, entregue pelo Pull Request #1 | Toda mudança de código entra por PR, com CI e revisão antes do merge |
+| 25/10 | Abrir o Pull Request | O comando `gh pr create` foi bloqueado (usa uma API que o ambiente não permite) | Abri o PR pela API REST do GitHub | Quando uma ferramenta falha, há outra via para o mesmo resultado; o erro dizia qual usar |
+| 25/10 | CI no GitHub | Primeira execução real do GitHub Actions | Passou de primeira: lint, formatação e 64 testes | O CI tinha sido simulado localmente num clone limpo antes do envio, o que evitou surpresa |
+| 25/10 | Visibilidade | Repositório ainda privado; o curso exige público | Pendente: tornar público antes da entrega | Conferir o checklist de submissão do curso (C4, Unidade 5.3.1) cedo, não no último dia |
+
 ## Decisões de escopo
 
 Para entregar um MVP funcional até 26/10 sem perder a visão do produto, decidi o que fica para depois. Cada corte está documentado em "Fora do escopo" e na "Visão pós-MVP" do `requisitos.md`.
@@ -84,6 +103,6 @@ Para entregar um MVP funcional até 26/10 sem perder a visão do produto, decidi
 
 ## Lições aprendidas (preencher ao final)
 
-- Onde a IA mais ajudou:
-- Onde a IA errou ou não entendeu o contexto:
-- O que eu faria diferente:
+- Onde a IA mais ajudou: (preencher)
+- Onde a IA errou ou não entendeu o contexto: sugeriu SQLite sem considerar o deploy; propôs timer e desafios, inadequados para TDAH; não previu injeção de prompt no primeiro desenho do P-07. (revisar e completar)
+- O que eu faria diferente: criar o repositório vazio e configurar o acesso ao GitHub logo no primeiro dia. (revisar e completar)
