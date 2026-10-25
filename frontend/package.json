@@ -1,0 +1,40 @@
+{
+  "name": "foco-do-dia-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Frontend do Foco do Dia: planner diário para pessoas com TDAH",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@vitejs/plugin-react": "^6.1.2",
+    "@vitest/coverage-v8": "^5.0.5",
+    "eslint": "^10.13.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-security": "^4.2.0",
+    "globals": "^17.13.0",
+    "jsdom": "^30.1.3",
+    "prettier": "^3.9.10",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}

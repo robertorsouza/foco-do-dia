@@ -1,0 +1,43 @@
+@import 'tailwindcss';
+
+/* Tokens do protótipo no Figma (docs/design/telas.html). */
+@theme {
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --color-fundo: #fafaf7;
+  --color-tinta: #141414;
+  --color-suave: #6b6a66;
+  --color-apagado: #9a988f;
+  --color-linha: #e7e5e0;
+  --color-manha: #f6eedc;
+  --color-tarde: #e5eee7;
+  --color-noite: #e8e7f3;
+  --color-noite-forte: #4b4a7a;
+  --color-urgente: #b9461a;
+  --color-urgente-fundo: #fbeae2;
+  --color-aberto: #8a6a1f;
+}
+
+html,
+body {
+  background: var(--color-fundo);
+  color: var(--color-tinta);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Foco visível para navegação por teclado (acessibilidade). */
+:focus-visible {
+  outline: 2px solid var(--color-tinta);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .surgir {
+    animation: surgir 180ms ease-out;
+  }
+  @keyframes surgir {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+}

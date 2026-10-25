@@ -109,6 +109,9 @@ Registro do que aconteceu ao colocar o projeto para funcionar de verdade (GitHub
 | 25/10 | Banco no Neon | Primeiro abri o perfil do Neon no GitHub achando que era o cadastro. Na criação do projeto, a tela oferecia vários serviços extras (storage, functions, AI gateway, realtime, auth) | Cadastro em neon.com com a conta do GitHub; projeto `foco-do-dia` em AWS US East 2 (Ohio), só com o Postgres ligado. O endereço do banco ficou guardado fora do chat e do repositório | Ligar só o que a arquitetura usa (menos superfície de ataque e de custo). Banco e backend na mesma região: o Render será criado em Ohio. Segredo nunca vai para chat ou Git |
 | 25/10 | Telas no Figma | A conversão automática de HTML para Figma foi bloqueada pela rede do ambiente da IA | A IA desenhou as 5 telas direto no Figma via API, com componentes reutilizáveis (Tag, Check, Item, Botão, Chip). O HTML de referência ficou em `docs/design/telas.html` | Ter um plano B quando uma ferramenta falha. Componentes desde o início facilitam ajustes e a tradução para React |
 | 25/10 | Jornadas e protótipo | Ao mapear as jornadas, faltava na tela Hoje um caminho para "Fechar o dia" e para ver dias anteriores; e a tela "Dia fechado" mostrava pendências que, pela regra, já teriam destino | Mapa de jornadas (`jornadas.md`) tirado das regras e das mensagens reais da API; botão e navegação pela data adicionados; estados e 7 popups de confirmação ligados num protótipo clicável no Figma | Desenhar as jornadas a partir das regras do backend revela telas e caminhos que faltam antes de escrever o frontend |
+| 25/10 | Frontend: teste ponta a ponta | Rodando o app de verdade (backend + PostgreSQL + navegador) com uma semana de dados, a seção "Atividades pendentes" chegou a 10 itens, e a tela de dia fechado mostrava a barra de progresso cheia (só as feitas aparecem depois de fechar) | Pendências mostram 3 e o resto a um toque ("Ver mais"); dia fechado usa a contagem do relatório. As duas falhas só apareceram com dados reais, não no protótipo | Testar com dados realistas, não só com o caso bonito do protótipo. Uma lista longa pesa para quem tem TDAH |
+| 25/10 | Frontend: fonte e segurança | A fonte vinha do Google Fonts e foi bloqueada na rede do ambiente; isso também seria uma dependência externa em produção | Fonte Inter empacotada no próprio app (@fontsource) e política de segurança (CSP) na Vercel liberando só a API do Render. Testei o build de produção com a CSP ativa: nenhuma violação | Menos dependências externas = menos falhas e menos rastreamento do usuário |
+| 25/10 | Frontend: limite de requisições | No teste ponta a ponta, o limite de 300 requisições em 15 minutos foi atingido pelo script que criou os dados de teste | Reiniciar a API entre a carga de dados e o teste. Uso normal do app fica bem abaixo (cerca de 1 por minuto com o app aberto) | O limite protege a API; os testes precisam respeitá-lo em vez de desligá-lo |
 | 25/10 | Visibilidade | Repositório ainda privado; o curso exige público | Tornado público pelo autor | Conferir o checklist de submissão do curso (C4, Unidade 5.3.1) cedo, não no último dia |
 
 ## Auditoria de segurança do backend (25/10)
@@ -184,6 +187,17 @@ Quarta rodada, pedida pelo autor depois de perceber um padrão: **a cada revisã
 - **"Pronto" precisa de critério, não de sensação.** Adotamos uma definição de pronto: nenhum problema alto ou médio aberto, toda regra com teste, CI verde e riscos restantes documentados.
 - **Pedir que a revisão prove executando** separa achado real de opinião: 9 dos 15 itens vieram com teste no banco real.
 - **Risco anotado e não verificado é risco aceito sem saber** (item 7).
+
+## Frontend: decisões e revisões (25/10)
+
+| Decisão | Por quê |
+| --- | --- |
+| O frontend não decide regras: mostra as mensagens da API como estão | As regras ficam testadas num lugar só (backend). Onde a API recusaria, a opção nem aparece (ex.: "levar" numa atividade feita) |
+| Confirmação Sim/Não só para o que não dá para desfazer | Excluir, deixar de lado, fechar o dia, tornar fixa. Marcar e mover não pedem confirmação, para não cansar |
+| Resumo da semana sem IA | O backend não gera texto da IA para a semana. O resumo é uma frase calculada (o dia que mais rendeu), sem números inventados |
+| "Ver mais pendências" | Achado do teste ponta a ponta: uma lista longa de pendências pesa |
+| Rotas por `#` (hash) | Funciona em hospedagem estática da Vercel sem configuração extra |
+| 42 testes de tela pelas jornadas J1–J9 | Cada teste confere o que o app envia para a API e o que mostra; inclui XSS e o caso "a API recusou" |
 
 ## Decisões de escopo
 

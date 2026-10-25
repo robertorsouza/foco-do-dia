@@ -215,9 +215,12 @@ foco-do-dia/
 │   └── .env.example
 ├── frontend/
 │   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   └── api/
+│   │   ├── api/          (cliente HTTP e uma função por endpoint)
+│   │   ├── components/   (Botão, Chip, Popup, Aviso… espelhando o Figma)
+│   │   ├── pages/        (uma por tela do protótipo)
+│   │   └── lib/          (datas, textos de turno, sessão)
+│   ├── tests/            (jornadas J1–J9 com API falsa)
+│   ├── vercel.json       (cabeçalhos de segurança e CSP)
 │   └── .env.example
 ├── .github/workflows/ci.yml
 └── README.md
