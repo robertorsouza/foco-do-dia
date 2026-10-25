@@ -218,7 +218,7 @@
   <div class="status"><span>22:50</span><span>●●●</span></div>
   <div class="conteudo">
     <div><div class="data">Domingo, 25 de outubro</div><h1>Fechar o dia</h1></div>
-    <p class="texto">Você fez 4 de 7. Três ficaram para depois. Já deixamos um destino sugerido para cada uma; mude se quiser.</p>
+    <p class="texto">Você fez 4 de 7 hoje. Três ficaram para depois, e está tudo bem. Deixei uma sugestão de destino para cada uma; mude se quiser.</p>
 
     <div class="card-fecha">
       <div class="top"><div class="t">Revisar o frontend</div><div class="tag urgente">Urgente</div></div>
@@ -236,8 +236,16 @@
       <div class="opcoes"><div class="chip">Amanhã à noite</div><div class="chip">Próximo turno</div><div class="chip ativo">Em aberto</div><div class="chip">Deixar de lado</div></div>
     </div>
 
-    <div class="nota">"Em aberto" vai para Atividades pendentes, fora dos turnos. Se você não fechar, o dia fecha sozinho quando abrir o app amanhã.</div>
-    <div class="btn pri grande">Fechar o dia</div>
+    <div class="nota" style="display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:16px">
+      <h2 style="font-size:20px;color:var(--tinta)">Quer fechar o dia agora?</h2>
+      <p class="texto">Se precisar de ajuda, posso aplicar as sugestões de uma vez para você.</p>
+      <div class="btn sec">Usar todas as sugestões</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="btn pri grande">Fechar o dia</div>
+      <div class="btn ghost">Agora não</div>
+      <p style="font-size:13px;color:var(--suave);text-align:center;line-height:1.5">Se preferir não fechar, fique tranquilo. Amanhã o dia começa leve, com os turnos zerados, e o que ficou sem destino espera com calma em Atividades pendentes.</p>
+    </div>
   </div>
 </div>
 
