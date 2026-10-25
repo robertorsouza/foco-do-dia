@@ -262,6 +262,8 @@ certeza; diga "sem problemas" quando não houver. Considere o contexto de implan
 classifique como grave um risco de escala, de vários usuários ou de SEO, que não se aplica ao MVP.
 ```
 
+**Resultado (v3):** 1 item "a confirmar" (acessibilidade dos popups): já estava implementado em `Popup.jsx`, mas sem teste. Ajustado: teste de foco e Esc, e o foco das confirmações passou para o "não". O Copilot respondeu só 3 das 7 verificações; o autor pediu uma segunda rodada só com as que faltaram (jornadas, confirmações, testes fracos e textos). Lição: **silêncio não é aprovação** — conferir se a resposta cobre tudo o que o prompt pediu.
+
 ---
 
 ### P-09 · Revisão independente de código · *persona + escopo fechado + verificação por execução*

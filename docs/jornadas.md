@@ -7,7 +7,9 @@ Cada jornada lista o que o usuário **pode** fazer, o que **não pode** e o que 
 
 **Princípio de tom (decisão do autor):** o app pergunta, não impõe. Confirmações usam "Sim / Não" com palavras claras ("Sim, fechar", "Ainda não"). Nenhuma mensagem culpa o usuário.
 
-**Quando pede confirmação (popup Sim/Não):** só nas ações que não dá para desfazer — excluir, deixar de lado, fechar o dia, tornar fixa. Marcar como feita e mover não pedem confirmação, porque dá para voltar atrás.
+**Quando pede confirmação (popup Sim/Não):** só nas ações que não dá para desfazer — excluir, deixar de lado, fechar o dia, tornar fixa. Marcar como feita e mover não pedem confirmação, mas o usuário fica ciente: um aviso diz o que aconteceu e, ao mover, traz o botão **Desfazer** por alguns segundos (decisão do autor, 25/10).
+
+**De onde vem o código de acesso:** no MVP há um único usuário. O próprio autor define o código na configuração do servidor (`APP_ACCESS_TOKEN`) e digita uma vez no app. Não há envio por e-mail: isso exigiria cadastro e serviço de e-mail, e fica para depois do MVP.
 
 ---
 
@@ -37,10 +39,12 @@ Tocar numa atividade abre o **menu da atividade**. As opções mudam conforme o 
 
 | Situação | Pode? | O que o app mostra | Regra |
 | --- | --- | --- | --- |
-| Marcar como feita / desmarcar | ✅ | Toque no círculo. Sem confirmação | HU-02 |
+| Marcar como feita / desmarcar | ✅ | Toque no círculo. Aviso: "Feita. Toque de novo para desmarcar." | HU-02 |
 | Editar título, turno ou urgência (pendente ou feita, hoje) | ✅ | Campo editável no menu | HU-02 |
-| Levar para o próximo turno | ✅ | Toast: "Foi para a tarde." | HU-05 |
-| Levar para amanhã | ✅ | Toast: "Foi para amanhã de manhã." | HU-05, RN-11 |
+| Levar para o próximo turno | ✅ | Aviso: "Foi para a tarde." com **Desfazer** por 6 s | HU-05 |
+| Levar para amanhã | ✅ | Aviso: "Foi para amanhã à tarde." com **Desfazer** por 6 s | HU-05, RN-11 |
+| Desfazer depois de mover | ✅ | A atividade volta para onde estava, sem deixar rastro no histórico | HU-05 |
+| Desfazer depois que a cópia foi feita, ou num dia que já passou | ❌ | "Não dá mais para desfazer esse movimento." | HU-05, RN-13 |
 | Mover uma atividade já feita | ❌ | Opção não aparece no menu | API: "Só dá para mover atividades que ainda não foram feitas." |
 | Deixar de lado | ✅ com confirmação | Popup: "Deixar 'Mercado' de lado?" · **Sim, deixar de lado** / **Manter** | HU-06 |
 | Excluir (pendente ou feita, de hoje em diante) | ✅ com confirmação | Popup: "Excluir 'Mercado'?" · **Sim, excluir** / **Cancelar** | HU-03, RN-13 |
@@ -54,7 +58,7 @@ Tocar numa atividade abre o **menu da atividade**. As opções mudam conforme o 
 | Faltam 15 min e há pendências | — | Painel: "A manhã está acabando. Faltam 2. Já fez alguma?" Urgentes primeiro | HU-04, RN-04, RN-10 |
 | Sem pendências no turno | — | Nenhum alerta | RN-04 |
 | Marcar as que já fez | ✅ | Volta para Hoje com os círculos para marcar | HU-02 |
-| Levar todas para o próximo turno | ✅ | Toast: "Foram para a tarde." | HU-05 |
+| Levar todas para o próximo turno | ✅ | Aviso: "Foi para a tarde." com **Desfazer** | HU-05 |
 | Agora não | ✅ | Fecha o painel. Não volta a perguntar no mesmo turno | RNF-01 |
 | App fechado na hora do alerta | — | Alerta não aparece (limitação do MVP) | README |
 

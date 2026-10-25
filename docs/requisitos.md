@@ -125,6 +125,8 @@ Critérios de aceitação no padrão **Gherkin / BDD** (Dado / Quando / Então =
 
 - **Dado** o alerta aberto, **quando** marco uma atividade como "já fiz", **então** ela fica `feita`.
 - **Dado** o alerta aberto, **quando** escolho "mover para o próximo turno", **então** as pendências restantes passam para o turno seguinte, mantendo a prioridade.
+- **Dado** que acabei de mover uma atividade, **quando** toco em "Desfazer", **então** ela volta para o dia e o turno de origem como `pendente`, e a cópia é apagada sem ficar no histórico. *(revisão do autor, 25/10: mover não pede confirmação, então precisa dar para voltar atrás)*
+- **Dado** que a cópia já foi feita ou a origem é de um dia passado, **quando** tento desfazer, **então** o app avisa que não dá mais.
 
 ### HU-06 — Fechar o dia com ajuda, sem bloqueio · Must
 **Como** usuário, **quero** ajuda para decidir o destino do que não fiz, sem ser obrigado, **para** fechar o dia sem culpa.

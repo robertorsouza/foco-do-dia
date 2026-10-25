@@ -402,3 +402,79 @@ describe('J9: fixas', () => {
     expect(await screen.findByText('PRÓXIMA VERSÃO')).toBeVisible();
   });
 });
+
+describe('J3 (revisão do autor): o usuário fica ciente e pode desfazer', () => {
+  it('marcar avisa como desmarcar', async () => {
+    abrirApp(
+      criarApiFalsa({
+        'GET /hoje': diaCom([atividade(1, 'Ler', 'manha')]),
+        'PATCH /atividades/:id': {},
+      }),
+    );
+    await usuario().click(await screen.findByRole('checkbox', { name: /Marcar como feita: Ler/ }));
+    expect(await screen.findByText('Feita. Toque de novo para desmarcar.')).toBeVisible();
+  });
+
+  it('depois de mover, "Desfazer" devolve a atividade (desfaz pela cópia)', async () => {
+    const api = criarApiFalsa({
+      'GET /hoje': diaCom([atividade(1, 'Mercado', 'tarde')]),
+      'POST /atividades/:id/mover': atividade(50, 'Mercado', 'tarde', {
+        data: '2026-10-26',
+        origem_id: 1,
+      }),
+      'POST /atividades/:id/desfazer-movimento': atividade(1, 'Mercado', 'tarde'),
+    });
+    abrirApp(api);
+    const u = usuario();
+    await u.click(await screen.findByRole('button', { name: 'Mercado' }));
+    await u.click(screen.getByRole('button', { name: /Levar para amanhã/ }));
+    await u.click(await screen.findByRole('button', { name: 'Desfazer' }));
+    await waitFor(() =>
+      expect(api.feitas('POST', '/atividades/50/desfazer-movimento')).toHaveLength(1),
+    );
+    expect(await screen.findByText('Voltou para onde estava.')).toBeVisible();
+  });
+
+  it('se não der mais para desfazer, mostra a mensagem da API', async () => {
+    const api = criarApiFalsa({
+      'GET /hoje': diaCom([atividade(1, 'Mercado', 'tarde')]),
+      'POST /atividades/:id/mover': atividade(50, 'Mercado', 'tarde', { origem_id: 1 }),
+      'POST /atividades/:id/desfazer-movimento': () => {
+        throw { status: 409, erro: 'Não dá mais para desfazer esse movimento.' };
+      },
+    });
+    abrirApp(api);
+    const u = usuario();
+    await u.click(await screen.findByRole('button', { name: 'Mercado' }));
+    await u.click(screen.getByRole('button', { name: /Levar para o próximo turno/ }));
+    await u.click(await screen.findByRole('button', { name: 'Desfazer' }));
+    expect(await screen.findByText('Não dá mais para desfazer esse movimento.')).toBeVisible();
+  });
+});
+
+describe('Acessibilidade dos popups (item 1 do Copilot, PR #8)', () => {
+  it('abre com foco no primeiro botão e fecha com Esc, devolvendo o foco', async () => {
+    abrirApp(criarApiFalsa({ 'GET /hoje': diaCom([atividade(1, 'Mercado', 'tarde')]) }));
+    const u = usuario();
+    const titulo = await screen.findByRole('button', { name: 'Mercado' });
+    await u.click(titulo);
+    const menu = screen.getByRole('dialog', { name: 'Mercado' });
+    expect(menu).toHaveAttribute('aria-modal', 'true');
+    expect(within(menu).getAllByRole('button')[0]).toHaveFocus();
+    await u.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(titulo).toHaveFocus();
+  });
+
+  it('confirmação começa com foco no "não" e fecha com Esc sem executar a ação', async () => {
+    const api = criarApiFalsa({ 'GET /hoje': diaCom([atividade(1, 'Mercado', 'tarde')]) });
+    abrirApp(api);
+    const u = usuario();
+    await u.click(await screen.findByRole('button', { name: 'Mercado' }));
+    await u.click(screen.getByRole('button', { name: /^Excluir/ }));
+    expect(screen.getByRole('button', { name: 'Cancelar' })).toHaveFocus(); // Enter sem querer não exclui
+    await u.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(api.feitas('DELETE', '/atividades')).toHaveLength(0);
+  });
+});

@@ -130,6 +130,33 @@ export async function moverAtividade(db, id, escolha, hoje) {
   });
 }
 
+/**
+ * HU-05: desfaz um movimento logo depois de feito (mover não pede confirmação).
+ * Apaga a cópia e devolve a original para "pendente", sem deixar rastro no histórico.
+ * Só vale enquanto a cópia ainda está pendente e a original é de hoje em diante.
+ */
+export async function desfazerMovimento(db, idDaCopia, hoje) {
+  const naoDa = () => new ErroDeNegocio(409, 'Não dá mais para desfazer esse movimento.');
+  return repo.emTransacao(db, async (tx) => {
+    const copia = await repo.buscarAtividade(tx, idDaCopia);
+    if (!copia) throw naoEncontrada();
+    const original = copia.origem_id ? await repo.buscarAtividade(tx, copia.origem_id) : null;
+    // Valida tudo antes de gravar: o banco de teste não desfaz transações.
+    if (!original || original.status !== 'movida' || original.data < hoje) throw naoDa();
+    if (copia.status !== 'pendente') throw naoDa();
+
+    const apagou = await repo.excluirAtividade(tx, copia.id, {
+      statusPermitidos: ['pendente'],
+      aPartirDe: hoje,
+    });
+    if (!apagou) throw naoDa();
+    await garantirDia(tx, original.data, hoje, { paraEscrita: true });
+    const devolvida = await repo.transicionarStatus(tx, original.id, ['movida'], 'pendente');
+    if (!devolvida) throw naoDa();
+    return devolvida;
+  });
+}
+
 /** HU-06: deixa uma atividade de lado, sem culpa. */
 export async function deixarDeLado(db, id, hoje) {
   const atividade = await repo.buscarAtividade(db, id);

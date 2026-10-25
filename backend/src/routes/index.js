@@ -74,6 +74,10 @@ export function criarRotas(ctx) {
     res.json(await atividades.moverAtividade(db, id, validar(e.destino, req.body), hoje()));
   });
 
+  router.post('/atividades/:id/desfazer-movimento', async (req, res) => {
+    res.json(await atividades.desfazerMovimento(db, validar(e.id, req.params.id), hoje()));
+  });
+
   router.post('/atividades/:id/deixar-de-lado', async (req, res) => {
     res.json(await atividades.deixarDeLado(db, validar(e.id, req.params.id), hoje()));
   });
