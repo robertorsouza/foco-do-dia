@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Foco do Dia — Telas</title>
+<style>
+  :root {
+    --fundo: #FAFAF7; --tinta: #141414; --suave: #6B6A66; --linha: #E7E5E0;
+    --manha: #F6EEDC; --tarde: #E5EEE7; --noite: #E8E7F3;
+    --urgente: #B9461A; --urgente-fundo: #FBEAE2; --branco: #FFFFFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Inter, sans-serif; background: #DCDAD4; display: flex; gap: 80px; padding: 80px; align-items: flex-start; color: var(--tinta); }
+  .tela { width: 390px; min-height: 844px; background: var(--fundo); position: relative; overflow: hidden; display: flex; flex-direction: column; }
+  .conteudo { padding: 24px 20px 120px; display: flex; flex-direction: column; gap: 20px; flex: 1; }
+  .status { height: 47px; display: flex; justify-content: space-between; align-items: center; padding: 0 28px; font-size: 15px; font-weight: 600; }
+  .data { font-size: 14px; color: var(--suave); }
+  h1 { font-size: 40px; font-weight: 300; letter-spacing: -1px; line-height: 1.1; }
+  h2 { font-size: 22px; font-weight: 300; letter-spacing: -0.4px; line-height: 1.25; }
+  .rotulo { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--suave); }
+  p.texto { font-size: 15px; line-height: 1.5; color: var(--suave); }
+
+  .progresso { display: flex; flex-direction: column; gap: 8px; }
+  .barra { height: 6px; background: var(--linha); border-radius: 3px; overflow: hidden; }
+  .barra > div { height: 6px; background: var(--tinta); border-radius: 3px; }
+  .progresso span { font-size: 14px; color: var(--suave); }
+
+  .adicionar { background: var(--branco); border: 1px solid var(--linha); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .adicionar .campo { font-size: 16px; color: #A3A19B; }
+  .linha-chips { display: flex; gap: 6px; align-items: center; }
+  .chip { white-space: nowrap; font-size: 13px; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--linha); color: var(--suave); background: var(--branco); }
+  .chip.ativo { background: var(--tinta); color: var(--branco); border-color: var(--tinta); }
+  .chip.urg { color: var(--urgente); border-color: #EFC9B8; }
+  .mais { flex-shrink: 0; margin-left: auto; width: 36px; height: 36px; border-radius: 18px; background: var(--tinta); color: var(--branco); font-size: 22px; font-weight: 300; display: flex; align-items: center; justify-content: center; }
+
+  .turno { border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+  .turno.manha { background: var(--manha); }
+  .turno.tarde { background: var(--tarde); }
+  .turno.noite { background: var(--noite); }
+  .turno.atual { outline: 2px solid var(--tinta); }
+  .cab-turno { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 8px; }
+  .cab-turno h3 { font-size: 20px; font-weight: 400; }
+  .cab-turno span { font-size: 13px; color: var(--suave); }
+  .agora { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; background: var(--tinta); color: var(--branco); padding: 3px 8px; border-radius: 999px; margin-left: 8px; vertical-align: 3px; }
+
+  .item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid rgba(20,20,20,0.08); }
+  .item:first-of-type { border-top: none; }
+  .check { width: 24px; height: 24px; border-radius: 12px; border: 1.5px solid var(--tinta); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .check.feita { background: var(--tinta); }
+  .item .titulo { font-size: 16px; flex: 1; }
+  .item.feita .titulo { color: var(--suave); text-decoration: line-through; }
+  .tag { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; }
+  .tag.urgente { color: var(--urgente); background: var(--urgente-fundo); }
+  .tag.fixa { color: var(--suave); background: rgba(20,20,20,0.06); }
+
+  .pendentes { border: 1.5px dashed #C9C6BE; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .pendentes .cab h3 { font-size: 18px; font-weight: 400; }
+  .pendentes .cab p { font-size: 13px; color: var(--suave); margin-top: 2px; }
+  .pend { background: var(--branco); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .pend .t { font-size: 15px; }
+  .pend .d { font-size: 12px; color: var(--suave); }
+  .acoes { display: flex; gap: 8px; }
+  .btn { font-size: 14px; font-weight: 500; padding: 10px 14px; border-radius: 12px; text-align: center; }
+  .btn.pri { background: var(--tinta); color: var(--branco); }
+  .btn.sec { background: var(--branco); border: 1px solid var(--linha); color: var(--tinta); }
+  .btn.ghost { color: var(--suave); }
+  .btn.grande { font-size: 16px; padding: 16px; border-radius: 16px; }
+
+  .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 84px; background: var(--branco); border-top: 1px solid var(--linha); display: flex; justify-content: space-around; padding-top: 12px; }
+  .nav div { font-size: 12px; color: var(--suave); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .nav div.ativo { color: var(--tinta); font-weight: 600; }
+  .nav i { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid currentColor; display: block; }
+  .nav div.ativo i { background: var(--tinta); }
+
+  /* Acesso */
+  .acesso { padding: 120px 28px 40px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+  .marca { font-size: 48px; font-weight: 200; letter-spacing: -1.5px; }
+  .input { background: var(--branco); border: 1px solid var(--linha); border-radius: 14px; padding: 16px; font-size: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .input small { font-size: 12px; color: var(--suave); }
+  .input span { letter-spacing: 4px; }
+  .rodape { font-size: 13px; color: var(--suave); text-align: center; margin-top: auto; }
+
+  /* Alerta */
+  .veu { position: absolute; inset: 0; background: rgba(20,20,20,0.45); }
+  .folha { position: absolute; left: 0; right: 0; bottom: 0; background: var(--fundo); border-radius: 28px 28px 0 0; padding: 12px 20px 36px; display: flex; flex-direction: column; gap: 18px; }
+  .puxador { width: 40px; height: 5px; background: var(--linha); border-radius: 3px; align-self: center; }
+  .linha-alerta { background: var(--branco); border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 10px; }
+  .linha-alerta .t { flex: 1; font-size: 15px; }
+  .mini { font-size: 13px; font-weight: 500; padding: 8px 12px; border-radius: 10px; }
+  .mini.pri { background: var(--tinta); color: var(--branco); }
+  .mini.sec { border: 1px solid var(--linha); background: var(--fundo); }
+
+  /* Fechamento */
+  .card-fecha { background: var(--branco); border: 1px solid var(--linha); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .card-fecha .top { display: flex; align-items: center; gap: 8px; }
+  .card-fecha .t { font-size: 16px; flex: 1; }
+  .card-fecha .sub { font-size: 12px; color: var(--suave); }
+  .opcoes { display: flex; flex-wrap: wrap; gap: 6px; }
+  .opcoes .chip { font-size: 12px; padding: 7px 10px; }
+  .sugerido { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; margin-left: 4px; opacity: 0.7; }
+  .nota { font-size: 13px; color: var(--suave); line-height: 1.45; background: rgba(20,20,20,0.04); border-radius: 12px; padding: 12px; }
+
+  /* Relatório */
+  .abas { display: flex; background: rgba(20,20,20,0.06); border-radius: 12px; padding: 4px; }
+  .abas div { flex: 1; text-align: center; font-size: 14px; padding: 8px; border-radius: 9px; color: var(--suave); }
+  .abas div.ativo { background: var(--branco); color: var(--tinta); font-weight: 600; }
+  .numero { display: flex; align-items: baseline; gap: 10px; }
+  .numero b { font-size: 64px; font-weight: 200; letter-spacing: -2px; }
+  .numero span { font-size: 16px; color: var(--suave); }
+  .ia { background: var(--branco); border: 1px solid var(--linha); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .ia p { font-size: 17px; line-height: 1.5; font-weight: 300; }
+  .por-turno { display: flex; flex-direction: column; gap: 12px; }
+  .pt { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+  .pt .n { width: 56px; }
+  .pt .barra { flex: 1; height: 10px; border-radius: 5px; }
+  .pt .barra > div { height: 10px; }
+  .pt .v { width: 32px; text-align: right; color: var(--suave); }
+  .resumo { display: flex; gap: 8px; }
+  .resumo div { flex: 1; background: var(--branco); border: 1px solid var(--linha); border-radius: 14px; padding: 12px; font-size: 13px; color: var(--suave); }
+  .resumo b { display: block; font-size: 22px; font-weight: 300; color: var(--tinta); }
+  .fixa-sug { background: var(--noite); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .fixa-sug .t { font-size: 16px; }
+  .fixa-sug .d { font-size: 13px; color: var(--suave); }
+</style>
+</head>
+<body>
+
+<!-- 1. Código de acesso -->
+<div class="tela" id="acesso">
+  <div class="status"><span>9:41</span><span>●●●</span></div>
+  <div class="acesso">
+    <div class="marca">Foco do Dia</div>
+    <p class="texto">Um turno de cada vez.<br>Sem culpa pelo que ficar para depois.</p>
+    <div style="height:32px"></div>
+    <div class="input"><small>Código de acesso</small><span>••••••••••••</span></div>
+    <div class="btn pri grande">Entrar</div>
+    <div class="rodape">O código fica salvo só neste aparelho.</div>
+  </div>
+</div>
+
+<!-- 2. Hoje -->
+<div class="tela" id="hoje">
+  <div class="status"><span>10:20</span><span>●●●</span></div>
+  <div class="conteudo">
+    <div>
+      <div class="data">Domingo, 25 de outubro</div>
+      <h1>Hoje</h1>
+    </div>
+    <div class="progresso">
+      <div class="barra"><div style="width:29%"></div></div>
+      <span>2 de 7 feitas</span>
+    </div>
+    <div class="adicionar">
+      <div class="campo">O que você precisa fazer?</div>
+      <div class="linha-chips">
+        <div class="chip ativo">Manhã</div><div class="chip">Tarde</div><div class="chip">Noite</div><div class="chip urg">Urgente</div>
+        <div class="mais">+</div>
+      </div>
+    </div>
+
+    <div class="turno manha atual">
+      <div class="cab-turno"><h3>Manhã<span class="agora">AGORA</span></h3><span>até 12h</span></div>
+      <div class="item"><div class="check"></div><div class="titulo">Pagar conta de luz</div><div class="tag urgente">Urgente</div></div>
+      <div class="item feita"><div class="check feita"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3.5" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="titulo">Tomar remédio</div><div class="tag fixa">Fixa</div></div>
+      <div class="item"><div class="check"></div><div class="titulo">Responder e-mail do curso</div></div>
+    </div>
+
+    <div class="turno tarde">
+      <div class="cab-turno"><h3>Tarde</h3><span>12h às 18h</span></div>
+      <div class="item"><div class="check"></div><div class="titulo">Revisar o frontend</div><div class="tag urgente">Urgente</div></div>
+      <div class="item"><div class="check"></div><div class="titulo">Mercado</div></div>
+    </div>
+
+    <div class="turno noite">
+      <div class="cab-turno"><h3>Noite</h3><span>18h às 23h</span></div>
+      <div class="item feita"><div class="check feita"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3.5" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="titulo">Academia</div><div class="tag fixa">Fixa</div></div>
+      <div class="item"><div class="check"></div><div class="titulo">Ler 10 páginas</div></div>
+    </div>
+
+    <div class="pendentes">
+      <div class="cab"><h3>Atividades pendentes</h3><p>De dias anteriores, ainda sem destino</p></div>
+      <div class="pend">
+        <div><div class="t">Marcar dentista</div><div class="d">Em aberto desde 23/10</div></div>
+        <div class="acoes"><div class="btn sec">Trazer para hoje</div><div class="btn ghost">Deixar de lado</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="nav"><div class="ativo"><i></i>Hoje</div><div><i></i>Relatórios</div><div><i></i>Fixas</div></div>
+</div>
+
+<!-- 3. Alerta de fim de turno -->
+<div class="tela" id="alerta">
+  <div class="status"><span>11:47</span><span>●●●</span></div>
+  <div class="conteudo">
+    <div><div class="data">Domingo, 25 de outubro</div><h1>Hoje</h1></div>
+    <div class="turno manha atual" style="height:220px"></div>
+    <div class="turno tarde" style="height:160px"></div>
+  </div>
+  <div class="veu"></div>
+  <div class="folha">
+    <div class="puxador"></div>
+    <div class="rotulo">Faltam 13 minutos para o fim da manhã</div>
+    <h2>A manhã está acabando. Faltam 2. Já fez alguma?</h2>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="linha-alerta"><div class="t">Pagar conta de luz</div><div class="tag urgente">Urgente</div></div>
+      <div class="linha-alerta"><div class="t">Responder e-mail do curso</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="btn pri grande">Marcar as que já fiz</div>
+      <div class="btn sec grande">Levar as duas para a tarde</div>
+      <div class="btn ghost">Agora não</div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Fechar o dia -->
+<div class="tela" id="fechar">
+  <div class="status"><span>22:50</span><span>●●●</span></div>
+  <div class="conteudo">
+    <div><div class="data">Domingo, 25 de outubro</div><h1>Fechar o dia</h1></div>
+    <p class="texto">Você fez 4 de 7. Três ficaram para depois. Já deixamos um destino sugerido para cada uma; mude se quiser.</p>
+
+    <div class="card-fecha">
+      <div class="top"><div class="t">Revisar o frontend</div><div class="tag urgente">Urgente</div></div>
+      <div class="sub">Tarde</div>
+      <div class="opcoes"><div class="chip ativo">Amanhã de manhã<span class="sugerido">SUGERIDO</span></div><div class="chip">Em aberto</div><div class="chip">Deixar de lado</div></div>
+    </div>
+    <div class="card-fecha">
+      <div class="top"><div class="t">Mercado</div></div>
+      <div class="sub">Tarde</div>
+      <div class="opcoes"><div class="chip ativo">Amanhã à tarde<span class="sugerido">SUGERIDO</span></div><div class="chip">Em aberto</div><div class="chip">Deixar de lado</div></div>
+    </div>
+    <div class="card-fecha">
+      <div class="top"><div class="t">Ler 10 páginas</div></div>
+      <div class="sub">Noite</div>
+      <div class="opcoes"><div class="chip">Amanhã à noite</div><div class="chip">Próximo turno</div><div class="chip ativo">Em aberto</div><div class="chip">Deixar de lado</div></div>
+    </div>
+
+    <div class="nota">"Em aberto" vai para Atividades pendentes, fora dos turnos. Se você não fechar, o dia fecha sozinho quando abrir o app amanhã.</div>
+    <div class="btn pri grande">Fechar o dia</div>
+  </div>
+</div>
+
+<!-- 5. Relatório do dia -->
+<div class="tela" id="relatorio">
+  <div class="status"><span>22:52</span><span>●●●</span></div>
+  <div class="conteudo">
+    <div><div class="data">Domingo, 25 de outubro</div><h1>Seu dia</h1></div>
+    <div class="abas"><div class="ativo">Dia</div><div>Semana</div></div>
+    <div class="numero"><b>4 de 7</b><span>concluídas</span></div>
+
+    <div class="ia">
+      <div class="rotulo">Resumo</div>
+      <p>A manhã rendeu: tudo feito, inclusive o urgente. Amanhã, comece pelo frontend logo cedo, enquanto a energia está alta.</p>
+    </div>
+
+    <div class="por-turno">
+      <div class="rotulo">Por turno</div>
+      <div class="pt"><div class="n">Manhã</div><div class="barra"><div style="width:100%"></div></div><div class="v">3/3</div></div>
+      <div class="pt"><div class="n">Tarde</div><div class="barra"><div style="width:0%"></div></div><div class="v">0/2</div></div>
+      <div class="pt"><div class="n">Noite</div><div class="barra"><div style="width:50%"></div></div><div class="v">1/2</div></div>
+    </div>
+
+    <div class="resumo">
+      <div><b>2</b>para amanhã</div>
+      <div><b>1</b>em aberto</div>
+      <div><b>0</b>deixadas de lado</div>
+    </div>
+
+    <div class="fixa-sug">
+      <div class="rotulo">Virar atividade fixa?</div>
+      <div><div class="t">Ler 10 páginas</div><div class="d">Feita em 3 dos últimos 7 dias, sempre à noite</div></div>
+      <div class="acoes"><div class="btn pri">Tornar fixa</div><div class="btn ghost">Agora não</div></div>
+    </div>
+  </div>
+  <div class="nav"><div><i></i>Hoje</div><div class="ativo"><i></i>Relatórios</div><div><i></i>Fixas</div></div>
+</div>
+
+</body>
+</html>
