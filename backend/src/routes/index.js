@@ -59,7 +59,9 @@ export function criarRotas(ctx) {
 
   router.patch('/atividades/:id', async (req, res) => {
     const id = validar(e.id, req.params.id);
-    res.json(await atividades.atualizarAtividade(db, id, validar(e.edicaoDeAtividade, req.body)));
+    res.json(
+      await atividades.atualizarAtividade(db, id, validar(e.edicaoDeAtividade, req.body), hoje()),
+    );
   });
 
   router.delete('/atividades/:id', async (req, res) => {

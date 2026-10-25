@@ -10,7 +10,8 @@ import { garantirDia } from './diasService.js';
 /** HU-01: cria uma atividade no turno escolhido (status pendente). */
 export async function criarAtividade(db, { titulo, turno, prioridade, data }, hoje) {
   const dataDaAtividade = data ?? hoje;
-  await garantirDia(db, dataDaAtividade, hoje);
+  if (dataDaAtividade < hoje) throw new ErroDeNegocio(422, 'Escolha hoje ou uma data futura.');
+  await garantirDia(db, dataDaAtividade, hoje, { paraEscrita: true });
   return repo.inserirAtividade(db, { data: dataDaAtividade, titulo, turno, prioridade });
 }
 
@@ -18,12 +19,22 @@ export async function criarAtividade(db, { titulo, turno, prioridade, data }, ho
  * HU-02 / HU-03: edita título, turno ou prioridade, ou alterna feita ↔ pendente.
  * Outros status mudam só pelas ações de mover, deixar de lado e fechar o dia.
  */
-export async function atualizarAtividade(db, id, campos) {
+export async function atualizarAtividade(db, id, campos, hoje) {
   const atividade = await repo.buscarAtividade(db, id);
   if (!atividade) throw naoEncontrada();
   if (!['pendente', 'feita'].includes(atividade.status)) {
     throw new ErroDeNegocio(409, 'Essa atividade já saiu do dia e não pode ser editada aqui.');
   }
+  // Dias passados já foram fechados: editar ali criaria pendências fora do fluxo.
+  if (atividade.data < hoje) {
+    throw new ErroDeNegocio(
+      409,
+      'Esse dia já foi fechado. Para retomar, crie a atividade de novo.',
+    );
+  }
+  // Voltar para pendente num dia de hoje já fechado reabre o dia.
+  if (campos.status === 'pendente')
+    await garantirDia(db, atividade.data, hoje, { paraEscrita: true });
   return repo.atualizarAtividade(db, id, campos);
 }
 
@@ -37,7 +48,13 @@ export async function excluirAtividade(db, id) {
  * Atividades "em_aberto" usam hoje como referência para "amanhã".
  */
 function calcularDestino(atividade, escolha, hoje) {
-  if (escolha.destino === 'proximo_turno') return proximoTurno(atividade.turno, atividade.data);
+  if (escolha.destino === 'proximo_turno') {
+    const destino = proximoTurno(atividade.turno, atividade.data);
+    if (atividade.status === 'em_aberto' || destino.data < hoje) {
+      throw new ErroDeNegocio(422, 'Para essa atividade, escolha amanhã ou outra data.');
+    }
+    return destino;
+  }
 
   const base = atividade.status === 'em_aberto' ? hoje : atividade.data;
   const data = escolha.destino === 'amanha' ? somarDias(base, 1) : escolha.data;
@@ -55,7 +72,7 @@ export async function aplicarDestino(db, atividade, escolha, hoje) {
     return repo.atualizarAtividade(db, atividade.id, { status: 'deixada_de_lado' });
   }
   const { data, turno } = calcularDestino(atividade, escolha, hoje);
-  await garantirDia(db, data, hoje);
+  await garantirDia(db, data, hoje, { paraEscrita: true });
   await repo.atualizarAtividade(db, atividade.id, { status: 'movida' });
   return repo.inserirAtividade(db, {
     data,

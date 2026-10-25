@@ -83,3 +83,13 @@ describe('Bug 5: datas fora do lugar', () => {
     expect(r.status).toBe(422);
   });
 });
+
+describe('Bug 6: atividades fixas duplicadas a cada visita ao dia', () => {
+  it('abrir o mesmo dia futuro várias vezes não duplica as fixas', async () => {
+    await api().post('/api/fixas').send({ titulo: 'Tomar remédio', turno: 'manha' });
+    await api().get('/api/dias/2026-10-26');
+    await api().get('/api/dias/2026-10-26');
+    const dia = await api().get('/api/dias/2026-10-26');
+    expect(dia.body.turnos.manha).toHaveLength(1);
+  });
+});

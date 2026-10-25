@@ -151,7 +151,7 @@ O frontend só pergunta; quem decide se deve alertar é o backend. Assim a regra
 1. O usuário toca em "Fechar o dia". O frontend chama `GET /dias/:data/sugestoes-fechamento`.
 2. Cada pendência vem com o destino sugerido já marcado (RN-11).
 3. O usuário confirma tudo, ajusta uma por uma ou escolhe "decidir depois".
-4. O frontend chama `POST /dias/:data/fechar`. O backend aplica os destinos, marca o resto como `em_aberto` e registra `fechado_em`. Atividades `em_aberto` deixam de aparecer nos turnos e passam a ser listadas só em `GET /pendencias` (RN-12).
+4. O frontend chama `POST /dias/:data/fechar`. O backend aplica os destinos, marca o resto como `em_aberto` e registra `fechado_em`. Atividades `em_aberto` deixam de aparecer nos turnos e passam a ser listadas só em `GET /pendencias` (RN-12). O fechamento é atômico: o dia é marcado como fechado no início da transação, com `WHERE fechado_em IS NULL`, então duas requisições simultâneas não fecham o mesmo dia duas vezes. Uma escrita posterior num dia de hoje já fechado reabre o dia (RN-13).
 
 **Fechamento automático às 23h, sem servidor agendado:** o plano gratuito do Render desliga o backend quando não há uso, então não dá para depender de uma tarefa agendada. Usamos **fechamento preguiçoso**: na primeira requisição de um novo dia, o backend verifica se o dia anterior ficou aberto e o fecha aplicando a mesma regra do passo 4. O resultado para o usuário é o mesmo.
 
