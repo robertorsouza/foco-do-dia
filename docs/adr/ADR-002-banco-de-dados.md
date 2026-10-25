@@ -22,7 +22,7 @@ O Foco do Dia depende de histórico: o relatório semanal (HU-11), a sugestão d
 
 ## Decisão
 
-**Opção C2:** PostgreSQL gerenciado no **Neon**.
+**Opção C2:** PostgreSQL gerenciado no **Neon**, região AWS US East 2 (Ohio), a mesma do backend no Render, para reduzir a latência entre API e banco.
 
 **Revisão de 25/10:** a decisão original era Render Postgres, com Neon como alternativa "se houver limite de prazo". A revisão independente do backend levantou o risco, e a documentação oficial do Render confirmou: o banco gratuito expira em 30 dias e é apagado. Como o produto depende de histórico (relatório semanal, RN-08), a alternativa virou a escolha.
 
