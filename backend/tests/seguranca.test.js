@@ -165,3 +165,24 @@ describe('Auditoria: cabeçalhos e limites', () => {
     expect(r.body.erro).toMatch(/Muitas tentativas/);
   });
 });
+
+// Revisão de QA do PR #2 (Copilot Chat, prompt P-08), item 2.
+describe('Limite geral de requisições', () => {
+  it('uso real do frontend (alerta a cada minuto + ações) não é bloqueado', async () => {
+    const amb = criarAmbiente({ agora: AGORA });
+    await amb.pronto();
+    // 15 min de uso intenso: 15 consultas de alerta + 60 ações e recargas.
+    for (let i = 0; i < 75; i++) {
+      expect((await amb.api().get('/api/alertas/agora')).status).toBe(200);
+    }
+  });
+
+  it('a requisição 301 em 15 minutos recebe 429', async () => {
+    const amb = criarAmbiente({ agora: AGORA });
+    await amb.pronto();
+    for (let i = 0; i < 300; i++) await amb.api().get('/api/fixas');
+    const r = await amb.api().get('/api/fixas');
+    expect(r.status).toBe(429);
+    expect(r.body.erro).toMatch(/Muitas requisições/);
+  }, 30_000);
+});

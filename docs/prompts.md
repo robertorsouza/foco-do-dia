@@ -204,6 +204,30 @@ USUÁRIO:
 
 ---
 
+### P-08 · Revisão de QA de Pull Request · *CO-STAR + anti-alucinação*
+
+Usado no Copilot Chat para revisar o PR #2 antes do merge. Diferente do P-05 (segurança), procura se a correção **funciona** e se **quebrou algo**, com perguntas específicas do sistema para evitar resposta genérica.
+
+```
+CONTEXTO: Pull Request #2 do Foco do Dia (Node.js + Express + PostgreSQL), correções da auditoria
+de segurança. Requisitos em docs/requisitos.md.
+OBJETIVO: revisão de QA antes do merge: (1) correção e casos de borda; (2) regressão — o frontend
+consulta /api/alertas/agora a cada minuto, o limite de 300/15 min comporta? o Helmet bloqueia algo?
+(3) cada mudança tem teste? algum teste é fraco? (4) mensagens em português, curtas, sem tom
+punitivo? (5) o limite por IP funciona atrás do proxy do Render?
+ESTILO: revisor de QA sênior, cita arquivo e linha.
+TOM: técnico e direto, sem elogios genéricos.
+AUDIÊNCIA: autor é product designer aprendendo engenharia; explique cada problema em uma frase simples.
+RESPOSTA: tabela (#, arquivo, problema, severidade, como reproduzir, sugestão), no máximo 8 itens;
+no final "Veredito: pode fazer merge" ou "Veredito: corrigir antes do merge", com o motivo.
+RESTRIÇÕES: só o código e os testes deste PR; não invente; marque "a confirmar" quando não tiver
+certeza; diga "sem problemas" quando não houver.
+```
+
+**Resultado:** 3 itens. 1 aceito (teste do limite geral), 2 com discordância fundamentada (premissa de 1 instância; CSP não afeta uma API JSON). Ver `uso-de-ia.md`.
+
+---
+
 ## 5. Checklist anti-alucinação (curso C3, Unidade 2.3)
 
 Aplicado a todo prompt antes de usar. O P-07 cumpre todos os itens.
