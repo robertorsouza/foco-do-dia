@@ -7,26 +7,28 @@ import express from 'express';
 import cors from 'cors';
 import { criarRotas } from './routes/index.js';
 import { ErroDeNegocio } from './services/erros.js';
+import { opcoesDeCors, exigirCodigoDeAcesso } from './seguranca.js';
 
 /**
  * @param {{db: import('pg').Pool, relogio?: () => Date, fuso?: string, ia?: object|null,
- *          origemPermitida?: string}} opcoes
+ *          origensPermitidas?: string, codigoDeAcesso?: string}} opcoes
  */
 export function criarApp({
   db,
   relogio = () => new Date(),
   fuso = 'America/Sao_Paulo',
   ia = null,
-  origemPermitida,
+  origensPermitidas,
+  codigoDeAcesso,
 }) {
   const app = express();
   app.disable('x-powered-by');
-  // CORS: só o domínio do frontend pode chamar a API (docs/arquitetura.md, seção 7).
-  app.use(cors(origemPermitida ? { origin: origemPermitida } : undefined));
+  // CORS fechado por padrão: só os domínios do frontend chamam a API (arquitetura, seção 7).
+  app.use(cors(opcoesDeCors(origensPermitidas)));
   app.use(express.json({ limit: '20kb' }));
 
   app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
-  app.use('/api', criarRotas({ db, relogio, fuso, ia }));
+  app.use('/api', exigirCodigoDeAcesso(codigoDeAcesso), criarRotas({ db, relogio, fuso, ia }));
 
   app.use((_req, res) => res.status(404).json({ erro: 'Endereço não encontrado.' }));
 

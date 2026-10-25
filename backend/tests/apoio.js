@@ -12,13 +12,19 @@ import { criarApp } from '../src/app.js';
 const esquema = readFileSync(new URL('../src/db/schema.sql', import.meta.url), 'utf8');
 
 /**
- * @param {{agora: string, ia?: object|null}} opcoes `agora` em ISO com fuso (ex.: 2026-10-24T09:00:00-03:00)
+ * @param {{agora: string, ia?: object|null, origensPermitidas?: string, codigoDeAcesso?: string}} opcoes `agora` em ISO com fuso (ex.: 2026-10-24T09:00:00-03:00)
  */
-export function criarAmbiente({ agora, ia = null }) {
+export function criarAmbiente({ agora, ia = null, ...seguranca }) {
   const { Pool } = newDb().adapters.createPg();
   const db = new Pool();
   const relogio = { agora: new Date(agora) };
-  const app = criarApp({ db, ia, relogio: () => relogio.agora, fuso: 'America/Sao_Paulo' });
+  const app = criarApp({
+    db,
+    ia,
+    relogio: () => relogio.agora,
+    fuso: 'America/Sao_Paulo',
+    ...seguranca,
+  });
 
   return {
     db,

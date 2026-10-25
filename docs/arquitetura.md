@@ -173,7 +173,10 @@ O frontend só pergunta; quem decide se deve alertar é o backend. Assim a regra
 | Endereço do banco | Variável de ambiente no Render (`DATABASE_URL`) |
 | Endereço da API no frontend | Variável de ambiente na Vercel (`VITE_API_URL`) |
 | Arquivo `.env` local | Listado no `.gitignore`; nunca vai para o GitHub. O repositório tem só um `.env.example` sem valores |
-| CORS | O backend aceita requisições apenas do domínio do frontend |
+| CORS | Fechado por padrão: só os domínios em `FRONTEND_URL` podem chamar a API pelo navegador |
+| Código de acesso | Toda rota em `/api` (exceto `/api/health`) exige `Authorization: Bearer <APP_ACCESS_TOKEN>`. Comparação em tempo constante |
+| TLS do banco | Certificado verificado por padrão fora do localhost (`DB_SSL=verify`) |
+| Produção | O servidor não inicia sem `FRONTEND_URL`, `APP_ACCESS_TOKEN` e `DATABASE_URL` |
 | Validação de esquemas (curso C4, Unidade 3.1.1) | **Zod** define o formato de cada entrada e saída da API (o equivalente ao Pydantic em Node). O mesmo esquema valida o JSON devolvido pela IA no relatório |
 | XSS | O React escapa o texto por padrão; títulos de atividades nunca são renderizados como HTML |
 | Consultas ao banco | Sempre parametrizadas na camada `db/`: o comando SQL é fixo e o valor digitado pelo usuário entra separado, como dado. Protege contra SQL injection |

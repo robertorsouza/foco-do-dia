@@ -59,7 +59,10 @@ Formato do laboratório do curso C4 (Unidade III). Para os trechos mais importan
 
 | Trecho | O que a IA gerou | O que eu corrigi | Categoria |
 | --- | --- | --- | --- |
-| (preencher na Etapa 4) | | | Segurança / Validação / Resiliência / Documentação / Padrões |
+| `db/pool.js`: TLS do banco | `ssl: { rejectUnauthorized: false }` fora do localhost: aceitava qualquer certificado, risco de interceptação (MITM). Apontado pelo Copilot Chat na revisão do PR #1 | Aceitei. Agora o certificado é verificado por padrão; desligar só com `DB_SSL=no-verify`, com aviso no log | Segurança |
+| `app.js`: CORS | Sem `FRONTEND_URL`, o CORS ficava aberto para qualquer site. Apontado pelo Copilot Chat | Aceitei. Agora é fechado por padrão (fail-closed) e aceita uma lista de domínios | Segurança |
+| `routes/`: sem autenticação | Nenhuma rota exigia identificação; publicada, qualquer pessoa poderia ler e apagar dados. Apontado pelo Copilot Chat, que sugeriu token, sessão ou mTLS | Aceitei com ajuste. Login completo está fora do escopo do MVP; implementei um código de acesso digitado uma vez no app (não embutido no frontend) e o servidor se recusa a subir em produção sem ele (RNF-10) | Segurança |
+| `db/pool.js` e IA | Na primeira versão, a própria IA que gerou o código (Claude) não apontou esses 3 riscos | Mantive a dupla verificação: uma IA não revisa o próprio código | Processo |
 
 Checklist de revisão aplicado a cada trecho (curso C4, Unidade 3.3.1):
 
@@ -86,6 +89,8 @@ Registro do que aconteceu ao colocar o projeto para funcionar de verdade (GitHub
 | 25/10 | Fluxo de Pull Request | Os commits do backend tinham sido feitos direto na `main` | Reorganizei: `main` só com a documentação; backend na branch `feat/backend`, entregue pelo Pull Request #1 | Toda mudança de código entra por PR, com CI e revisão antes do merge |
 | 25/10 | Abrir o Pull Request | O comando `gh pr create` foi bloqueado (usa uma API que o ambiente não permite) | Abri o PR pela API REST do GitHub | Quando uma ferramenta falha, há outra via para o mesmo resultado; o erro dizia qual usar |
 | 25/10 | CI no GitHub | Primeira execução real do GitHub Actions | Passou de primeira: lint, formatação e 64 testes | O CI tinha sido simulado localmente num clone limpo antes do envio, o que evitou surpresa |
+| 25/10 | Revisão automática do Copilot | Ao pedir o Copilot como reviewer do PR, a lista veio vazia ("Nothing to show") | Revisão automática de PR exige plano pago; usei o Copilot Chat (plano Free) com o prompt P-05 e colei o resultado no PR | Planos gratuitos têm limites; o mesmo objetivo (revisão independente) foi atingido por outro caminho |
+| 25/10 | Revisão de segurança | O Copilot encontrou 3 riscos reais (TLS, CORS, autenticação) que passaram pelos 64 testes e pela IA que gerou o código | Corrigidos com 13 testes novos (77 no total) | Um segundo revisor, de outra ferramenta, enxerga o que o autor não vê. Testes verificam o que foi pensado; revisão encontra o que não foi |
 | 25/10 | Visibilidade | Repositório ainda privado; o curso exige público | Pendente: tornar público antes da entrega | Conferir o checklist de submissão do curso (C4, Unidade 5.3.1) cedo, não no último dia |
 
 ## Decisões de escopo
