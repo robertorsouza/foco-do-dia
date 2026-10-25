@@ -15,6 +15,7 @@ Planner diário para pessoas com TDAH: checklist por turno, alertas na troca de 
 | [ADRs](docs/adr/) | Decisões: stack, banco de dados, regra × IA nos alertas, ferramentas de IA |
 | [Prompts](docs/prompts.md) | Biblioteca de prompts P-01 a P-09, com técnicas e versões |
 | [Uso de IA](docs/uso-de-ia.md) | Política, decisões (aceitei / ajustei / rejeitei), revisões e diário de integração |
+| [Relatório de QA](docs/relatorio-qa.md) | Resultado da revisão por área, cobertura dos testes e portão de QA a executar após o deploy |
 
 ## Backend: como rodar
 
