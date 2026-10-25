@@ -202,8 +202,8 @@ Com base nesta revisão:
 **Portão de QA (critérios mínimos para entregar):**
 
 - [x] CI verde no último commit da `main` (inclui concorrência no PostgreSQL real) — `90d190d`, PR #11
-- [ ] Seção 5.A completa: variáveis, migração e `/api/health` no Render — A1–A5, A7 e A8 ✅ (25/10); falta A9
-- [ ] CORS, código de acesso e limite validados com o app publicado (B1 a B5, B8)
+- [x] Seção 5.A completa: variáveis, migração e `/api/health` no Render — A1–A5, A7, A8 e A9 ✅ (25/10)
+- [ ] CORS, código de acesso e limite validados com o app publicado (B1 a B5, B8) — B1, B2, B3 e B5 ✅ (25/10); B8 em verificação
 - [ ] Virada de dia e alertas testados no ambiente real (D8 a D10)
 - [ ] IA testada com a chave real, com chave inválida e cronometrada (E2, E4, E11)
 - [ ] Fluxo completo feito pelo app: criar → concluir → mover → fechar o dia → relatório → pendências
@@ -227,8 +227,8 @@ Preencher ao executar o portão.
 
 | Data | Ambiente (URLs) | Executado por | Itens que passaram | Itens que falharam | Ação tomada |
 | --- | --- | --- | --- | --- | --- |
-| 25/10 | App: https://foco-do-dia.vercel.app · API: https://foco-do-dia.onrender.com (Render, Ohio) · Banco: Neon (AWS US East 2, Ohio) | Roberto (autor), com conferência da IA pelos prints | **A1, A8:** log do Render com "Banco atualizado." e "Your service is live". **A2–A5:** variáveis conferidas na tela de configuração. **A4** também provado pelo servidor ter subido (sem 12+ caracteres ele se recusa). **A3, B5:** domínio da Vercel igual ao `FRONTEND_URL`, e o app carrega os dados. **A7:** log sem o aviso de certificado não verificado. **B3:** entrar com o código certo funcionou. CI verde na `main` | Nenhum | Render instalou Node 26 em vez do 22 dos testes → Node 22 fixado no `package.json` (PR #11) |
+| 25/10 | App: https://foco-do-dia.vercel.app · API: https://foco-do-dia.onrender.com (Render, Ohio) · Banco: Neon (AWS US East 2, Ohio) | Roberto (autor), com conferência da IA pelos prints | **A1, A8:** log do Render com "Banco atualizado." e "Your service is live". **A2–A5:** variáveis conferidas na tela de configuração. **A4** também provado pelo servidor ter subido (sem 12+ caracteres ele se recusa). **A3, B5:** domínio da Vercel igual ao `FRONTEND_URL`, e o app carrega os dados. **A7:** log sem o aviso de certificado não verificado. **A9:** `/api/health` respondeu `{"status":"ok"}`. **B1:** `/api/hoje` sem código respondeu "Código de acesso inválido.". **B2:** código errado no app mostrou "Esse código não confere…". **B3:** entrar com o código certo funcionou. CI verde na `main` | Nenhum | Render instalou Node 26 em vez do 22 dos testes → Node 22 fixado no `package.json` (PR #11) |
 
-**Ainda a executar:** A9, B1, B2, B8, o fluxo completo pelo app e o relatório sem IA (ver a lista abaixo). D8 a D10 dependem do relógio: rodar amanhã (D8), à noite (D9) e às 11h45 (D10).
+**Em verificação pelo autor:** B8 (código de acesso nos logs) e o fluxo completo pelo app (criar → marcar → mover e desfazer → fechar o dia → relatório sem IA). D8 a D10 dependem do relógio: rodar amanhã (D8), à noite (D9) e às 11h45 (D10).
 
 **Fora do escopo desta entrega:** E2, E11 e E14 precisam da chave da IA (`LLM_API_KEY`), que o autor decidiu não configurar agora. Sem a chave, o relatório usa a mensagem padrão (RNF-06, ADR-003), coberta por teste.
