@@ -38,7 +38,7 @@ npm run dev              # API em http://localhost:3000
 ```bash
 cd frontend
 npm install
-npm test                 # 47 testes das jornadas, sem precisar do backend
+npm test                 # 49 testes das jornadas, sem precisar do backend
 cp .env.example .env     # VITE_API_URL aponta para a API
 npm run dev              # app em http://localhost:5173
 ```
