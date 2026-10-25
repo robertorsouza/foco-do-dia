@@ -4,7 +4,9 @@ Planner diário para pessoas com TDAH: checklist por turno, alertas na troca de 
 
 > Mini projeto de Engenharia de Software com IA generativa (especialização AKCIT/UFG), construído com boas práticas (requisitos, ADRs, testes, CI) e IA como copiloto. React + Tailwind, Node.js e PostgreSQL.
 
-**Status:** backend concluído e revisado (4 rodadas de revisão, incluindo uma independente). Frontend e deploy em andamento. Este README será completado na entrega final.
+**Status:** backend e frontend prontos e testados ponta a ponta. Deploy (Vercel + Render + Neon) em andamento. Este README será completado na entrega final.
+
+**Design:** [protótipo clicável no Figma](https://www.figma.com/design/gHPzXZSxynPrBNYvhBu8Gp) · [jornadas do usuário](docs/jornadas.md)
 
 ## Documentação
 
@@ -29,6 +31,16 @@ npm test                 # 113 testes, com banco em memória (não precisa de Po
 cp .env.example .env     # preencha DATABASE_URL
 npm run migrate          # cria as tabelas
 npm run dev              # API em http://localhost:3000
+```
+
+## Frontend: como rodar
+
+```bash
+cd frontend
+npm install
+npm test                 # 42 testes das jornadas, sem precisar do backend
+cp .env.example .env     # VITE_API_URL aponta para a API
+npm run dev              # app em http://localhost:5173
 ```
 
 Ou, da raiz do projeto: `make help`.
