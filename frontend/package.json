@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Frontend do Foco do Dia: planner diário para pessoas com TDAH",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
