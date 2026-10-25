@@ -11,7 +11,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - 113 testes automatizados (unidade, integração, cenários de borda e concorrência), lint com regras de segurança e CI no GitHub Actions rodando no banco em memória e num PostgreSQL 16 real (PR #4).
 - Migração do banco automática no `npm start` (PR #4).
 - Telas no Figma, protótipo clicável e mapa de jornadas J1–J9 com o que pode e o que não pode (PR #7).
-- Frontend (React + Tailwind + Vite): código de acesso, dia por turno, menu da atividade, alerta de fim de turno, fechamento do dia, atividades pendentes, dia anterior só para consulta, relatórios do dia e da semana e tela de fixas. 42 testes de tela, job no CI e política de segurança (CSP) na Vercel.
+- Frontend (React + Tailwind + Vite): código de acesso, dia por turno, menu da atividade, alerta de fim de turno, fechamento do dia, atividades pendentes, dia anterior só para consulta, relatórios do dia e da semana e tela de fixas. 47 testes de tela, job no CI e política de segurança (CSP) na Vercel.
+- "Desfazer" depois de mover uma atividade: endpoint `POST /atividades/:id/desfazer-movimento` e botão no aviso (revisão do autor da jornada J3).
 
 ### Alterado
 - Banco de dados de produção: Neon em vez de Render Postgres, cujo plano gratuito expira em 30 dias (ADR-002, PR #4).

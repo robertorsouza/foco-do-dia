@@ -27,7 +27,7 @@ Pré-requisitos: Node.js 22 e, para rodar a API, um PostgreSQL.
 ```bash
 cd backend
 npm install
-npm test                 # 113 testes, com banco em memória (não precisa de PostgreSQL)
+npm test                 # 120 testes, com banco em memória (não precisa de PostgreSQL)
 cp .env.example .env     # preencha DATABASE_URL
 npm run migrate          # cria as tabelas
 npm run dev              # API em http://localhost:3000
@@ -38,7 +38,7 @@ npm run dev              # API em http://localhost:3000
 ```bash
 cd frontend
 npm install
-npm test                 # 42 testes das jornadas, sem precisar do backend
+npm test                 # 47 testes das jornadas, sem precisar do backend
 cp .env.example .env     # VITE_API_URL aponta para a API
 npm run dev              # app em http://localhost:5173
 ```

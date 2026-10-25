@@ -118,6 +118,7 @@ Status: **aprovado em testes automatizados**
 | C10 | Mover para amanhã e para data específica; data passada → 422 | ✅ `api.test.js` | [ ] |
 | C11 | Deixar atividade de lado | ✅ `api.test.js` | [ ] |
 | C12 | Toque duplo em "mover" cria uma única cópia | ✅ `revisao-independente.test.js` (PostgreSQL real) | [ ] |
+| C13 | Desfazer movimento: volta para a origem sem rastro; recusa se a cópia foi feita ou a origem é de dia passado | ✅ `desfazer.test.js`; no app, `jornadas.test.jsx` | [ ] |
 
 Resultado esperado: regras de negócio atendidas, sem inconsistência de estado.
 

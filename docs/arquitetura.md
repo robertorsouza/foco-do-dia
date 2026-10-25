@@ -117,6 +117,7 @@ Base: `/api`. Todas as respostas em JSON. Todas as rotas, exceto `/health`, exig
 | PATCH | `/atividades/:id` | Edita título, turno, prioridade ou alterna feita/pendente | HU-02, HU-03 |
 | DELETE | `/atividades/:id` | Exclui atividade | HU-03 |
 | POST | `/atividades/:id/mover` | Move para próximo turno, amanhã ou outra data | HU-05, HU-06, HU-11 |
+| POST | `/atividades/:id/desfazer-movimento` | Desfaz um movimento: apaga a cópia (`:id`) e devolve a original para pendente | HU-05 |
 | POST | `/atividades/:id/deixar-de-lado` | Marca como deixada de lado | HU-06 |
 | GET | `/alertas/agora` | Informa se há alerta de troca de turno agora e quais pendências citar | HU-04 |
 | GET | `/dias/:data/sugestoes-fechamento` | Destino sugerido para cada pendência (RN-11) | HU-06 |
