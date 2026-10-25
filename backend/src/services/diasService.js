@@ -121,8 +121,10 @@ export async function fecharDiasAnteriores(db, hoje) {
     try {
       await fecharDia(db, data, [], hoje);
     } catch (erro) {
-      // Outra requisição fechou o mesmo dia ao mesmo tempo: tudo certo.
+      // Outra requisição fechou o mesmo dia ao mesmo tempo: o resultado é o mesmo.
+      // Qualquer outro erro continua sendo lançado.
       if (!(erro instanceof ErroDeNegocio && erro.status === 409)) throw erro;
+      console.info(`[dias] ${data} já tinha sido fechado por outra requisição.`);
     }
   }
   return abertos.length;

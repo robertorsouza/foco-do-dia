@@ -71,6 +71,17 @@ describe('Bug 4: fechamento automático simultâneo devolvia erro ao usuário', 
   });
 });
 
+describe('Revisão de QA do PR #3 (P-08), item 1: fechamento manual em paralelo', () => {
+  it('dois cliques em "Fechar o dia" ao mesmo tempo: um fecha (200), o outro recebe 409', async () => {
+    await criar({ titulo: 'A', turno: 'manha' });
+    const fechar = () => api().post(`/api/dias/${HOJE}/fechar`).send({});
+    const [r1, r2] = await Promise.all([fechar(), fechar()]);
+    expect([r1.status, r2.status].sort()).toEqual([200, 409]);
+    // A atividade foi para "em aberto" uma única vez.
+    expect((await api().get('/api/pendencias')).body).toHaveLength(1);
+  });
+});
+
 describe('Bug 5: datas fora do lugar', () => {
   it('não cria atividade em data passada', async () => {
     const r = await criar({ titulo: 'Passado', turno: 'manha', data: '2026-10-20' });
