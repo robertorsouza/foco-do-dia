@@ -195,18 +195,17 @@ Resultado esperado: a recorrência funciona sem duplicar nem deixar sobras.
 
 Com base nesta revisão:
 
-- **Backend:** aprovado para testes de pré-produção.
-- **Não aprovado** como "release sem validação adicional".
-- **Recomendado:** executar o portão abaixo depois do frontend e do deploy.
+- **Versão 1.0.0 (25/10): aprovada para entrega** pelo autor, depois do portão abaixo.
+- Itens que dependem do relógio (D8 a D10) seguem em acompanhamento no uso real; a IA (E2, E4, E11) fica fora desta versão por decisão do autor.
 
 **Portão de QA (critérios mínimos para entregar):**
 
 - [x] CI verde no último commit da `main` (inclui concorrência no PostgreSQL real) — `90d190d`, PR #11
 - [x] Seção 5.A completa: variáveis, migração e `/api/health` no Render — A1–A5, A7, A8 e A9 ✅ (25/10)
-- [ ] CORS, código de acesso e limite validados com o app publicado (B1 a B5, B8) — B1, B2, B3 e B5 ✅ (25/10); B8 em verificação
-- [ ] Virada de dia e alertas testados no ambiente real (D8 a D10)
-- [ ] IA testada com a chave real, com chave inválida e cronometrada (E2, E4, E11)
-- [ ] Fluxo completo feito pelo app: criar → concluir → mover → fechar o dia → relatório → pendências
+- [x] CORS, código de acesso e limite validados com o app publicado (B1 a B5, B8) — B1, B2, B3, B5 e B8 ✅ (25/10)
+- [ ] Virada de dia e alertas testados no ambiente real (D8 a D10) — em acompanhamento no uso real (cobertos por teste automático)
+- [ ] IA testada com a chave real, com chave inválida e cronometrada (E2, E4, E11) — fora do escopo da v1.0.0 (sem `LLM_API_KEY`)
+- [x] Fluxo completo feito pelo app: criar → concluir → mover → fechar o dia → relatório → pendências ✅ (25/10)
 
 ---
 
@@ -216,7 +215,7 @@ O backend está bem construído e tem boa base para evoluir. A combinação de a
 
 | Item | Status final |
 | --- | --- |
-| Recomendação | Executar o portão de QA (seção 7) antes da entrega |
+| Recomendação | Portão de QA executado; v1.0.0 aprovada para entrega (25/10) |
 | Risco geral | Controlado, mas não nulo |
 
 ---
@@ -229,6 +228,6 @@ Preencher ao executar o portão.
 | --- | --- | --- | --- | --- | --- |
 | 25/10 | App: https://foco-do-dia.vercel.app · API: https://foco-do-dia.onrender.com (Render, Ohio) · Banco: Neon (AWS US East 2, Ohio) | Roberto (autor), com conferência da IA pelos prints | **A1, A8:** log do Render com "Banco atualizado." e "Your service is live". **A2–A5:** variáveis conferidas na tela de configuração. **A4** também provado pelo servidor ter subido (sem 12+ caracteres ele se recusa). **A3, B5:** domínio da Vercel igual ao `FRONTEND_URL`, e o app carrega os dados. **A7:** log sem o aviso de certificado não verificado. **A9:** `/api/health` respondeu `{"status":"ok"}`. **B1:** `/api/hoje` sem código respondeu "Código de acesso inválido.". **B2:** código errado no app mostrou "Esse código não confere…". **B3:** entrar com o código certo funcionou. CI verde na `main` | Nenhum | Render instalou Node 26 em vez do 22 dos testes → Node 22 fixado no `package.json` (PR #11) |
 
-**Em verificação pelo autor:** B8 (código de acesso nos logs) e o fluxo completo pelo app (criar → marcar → mover e desfazer → fechar o dia → relatório sem IA). D8 a D10 dependem do relógio: rodar amanhã (D8), à noite (D9) e às 11h45 (D10).
+**Concluídos e aprovados pelo autor (25/10):** B8 (o código de acesso não aparece nos logs) e o fluxo completo pelo app (criar → marcar → mover e desfazer → fechar o dia → relatório sem IA). **Em acompanhamento:** D8 a D10 dependem do relógio (fechamento automático no dia seguinte, virada à meia-noite e alerta das 11h45); estão cobertos por teste automático.
 
 **Fora do escopo desta entrega:** E2, E11 e E14 precisam da chave da IA (`LLM_API_KEY`), que o autor decidiu não configurar agora. Sem a chave, o relatório usa a mensagem padrão (RNF-06, ADR-003), coberta por teste.

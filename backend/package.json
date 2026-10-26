@@ -1,6 +1,6 @@
 {
   "name": "foco-do-dia-backend",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "API do Foco do Dia: planner diário por turnos para pessoas com TDAH",
   "type": "module",
   "main": "src/server.js",
