@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/robertorsouza/foco-do-dia/actions/workflows/ci.yml/badge.svg)](https://github.com/robertorsouza/foco-do-dia/actions/workflows/ci.yml)
 ![Versão](https://img.shields.io/badge/vers%C3%A3o-v1.0.0-141414)
-![Licença](https://img.shields.io/badge/licen%C3%A7a-MIT-141414)
+![Licença](https://img.shields.io/badge/licen%C3%A7a-todos%20os%20direitos%20reservados-141414)
 
 Planner diário para pessoas com TDAH: o dia dividido em manhã, tarde e noite, um alerta antes de cada turno acabar e um fechamento do dia sem culpa.
 
@@ -228,4 +228,4 @@ Cada merge na `main` publica sozinho, depois de passar no CI. Detalhes em [Arqui
 
 ## Licença
 
-[MIT](LICENSE)
+© 2026 Roberto Souza. **Todos os direitos reservados.** O repositório é público para a avaliação do curso: pode ser lido, clonado e executado para avaliação ou estudo, mas não copiado, modificado ou reutilizado sem autorização. Veja [LICENSE](LICENSE).

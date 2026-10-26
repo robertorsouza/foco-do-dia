@@ -17,6 +17,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - Publicação: app na Vercel, API no Render e banco no Neon, todos em Ohio (25/10).
 
 ### Alterado
+- Licença: de MIT para "todos os direitos reservados", com permissão só para leitura e avaliação acadêmica (decisão do autor, 25/10).
 - Node 22 fixado no backend e no frontend, igual ao CI (o Render tinha instalado o Node 26).
 - Banco de dados de produção: Neon em vez de Render Postgres, cujo plano gratuito expira em 30 dias (ADR-002, PR #4).
 - Proteções falham fechadas: sem `NODE_ENV` declarado como local, a API exige código de acesso (PR #4).
