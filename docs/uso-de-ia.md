@@ -116,6 +116,10 @@ Registro do que aconteceu ao colocar o projeto para funcionar de verdade (GitHub
 | 25/10 | Jornada J3: "deixar o usuário ciente" | Ao revisar as jornadas, percebi que o documento dizia que mover "dá para voltar atrás", mas o app não oferecia caminho de volta | Decisão: aviso depois de marcar e botão **Desfazer** por 6 s depois de mover. Exigiu um endpoint novo no backend (`desfazer-movimento`), com 7 testes escritos antes (TDD), para desfazer sem sujar o histórico | Revisar o texto das jornadas contra o app revelou uma promessa que o produto não cumpria |
 | 25/10 | Jornada J1: código por e-mail? | Dúvida do autor: o código de acesso seria enviado por e-mail? | Não no MVP: um usuário só, que define o código no servidor. E-mail exige cadastro e serviço de envio → pós-MVP. Na entrega, o código vai junto com o link para os avaliadores | Separar o que é do MVP do que é de produto completo |
 | 25/10 | Revisão de QA do frontend, 2ª rodada (Copilot, só os 4 itens que faltaram) | O Copilot revisou a **versão antiga** (PR #8, já na main) e afirmou que o "Desfazer" não existia, quando ele estava no PR #9 | Conferi cada item no código do PR #9: item 1 **rejeitado** (versão desatualizada); item 3 **ajustado** só no ponto que ele acertou (teste de tocar fora do popup, mais 2 testes); itens 2 e 4 aceitos sem mudança (confirmações e textos sem problemas) | A IA revisora pode estar olhando outra versão do código. Sinal de alerta: afirmar que algo "não existe" logo depois de ter sido feito. Sempre conferir qual versão foi revisada |
+| 25/10 | PRs mergeados antes do último commit (2 vezes) | O PR #8 e o PR #9 foram mergeados enquanto a IA ainda subia commits. As mudanças ficaram fora da `main` | A IA abriu PRs de complemento (#9, #10) e passou a avisar "pode mergear" só no fim. Conferir a aba **Commits** antes do merge | Um PR é uma "foto" no momento do merge. Combinar quem sinaliza que o trabalho terminou |
+| 25/10 | Deploy do backend no Render | Dúvidas reais de quem publica pela primeira vez: o Render sugeriu Python 3; o Health Check foi digitado sem a barra (`api/health`); não ficou claro de onde vinha a `LLM_API_KEY` | Linguagem **Node** (o backend é JavaScript); `/api/health` com barra; IA deixada de fora por ora (o app usa a mensagem padrão). Logs: "Banco atualizado." e "Your service is live" | Cada campo de configuração tem um motivo. Entender o motivo evita errar o campo |
+| 25/10 | Versão do Node em produção | O log mostrou que o Render instalou o Node 26, enquanto os testes rodam no 22 | Node 22 fixado no `package.json` do backend e do frontend (PR #11) | Ler o log do deploy, não só o "deu certo". Produção deve usar a mesma versão dos testes |
+| 25/10 | Frontend na Vercel e ligação com a API | Risco de o domínio da Vercel ser diferente do `FRONTEND_URL` cadastrado no Render (o CORS bloquearia o app) | O domínio saiu igual (`foco-do-dia.vercel.app`). O autor entrou com o código no app publicado | Backend e frontend precisam "se reconhecer": um endereço errado vira "Sem conexão" |
 | 25/10 | Visibilidade | Repositório ainda privado; o curso exige público | Tornado público pelo autor | Conferir o checklist de submissão do curso (C4, Unidade 5.3.1) cedo, não no último dia |
 
 ## Auditoria de segurança do backend (25/10)
@@ -216,8 +220,28 @@ Para entregar um MVP funcional até 26/10 sem perder a visão do produto, decidi
 | Login e múltiplos usuários | O MVP atende um usuário |
 | Relatório mensal | Retirado de vez: longo prazo é cansativo para TDAH. Fica só o semanal |
 
-## Lições aprendidas (preencher ao final)
+## Lições aprendidas
 
-- Onde a IA mais ajudou: velocidade para gerar código, testes e documentação rastreável; e, como revisora independente, achar bugs reais e prová-los executando. (revisar e completar)
-- Onde a IA errou ou não entendeu o contexto: sugeriu SQLite sem considerar o deploy; propôs timer e desafios, inadequados para TDAH; não previu injeção de prompt no primeiro desenho do P-07; declarou o backend pronto antes da hora, e revisou o próprio código sem enxergar 4 bugs de concorrência e fluxo. (revisar e completar)
-- O que eu faria diferente: criar o repositório vazio e configurar o acesso ao GitHub logo no primeiro dia; definir o critério de "pronto" e fazer a revisão independente desde o início, não no fim. (revisar e completar)
+> Reflexão do autor ao final do projeto (25/10). Texto redigido com apoio da IA a partir do relato do autor; revisado por ele antes da entrega.
+
+### O que eu aprendi
+
+Durante o projeto, aprendi muito além do que esperava. Eu não sou desenvolvedor, e o trabalho com a IA me fez entender, na prática, coisas que antes eram só nomes:
+
+- **Banco de dados, backend e frontend são partes diferentes, cada uma com seu papel.** O frontend é a tela que a pessoa usa (Vercel). O backend é onde moram as regras (Render). O banco guarda os dados e só o backend fala com ele (Neon). Entendi também por que a escolha do banco depende de onde ele vai rodar: o SQLite apagaria os dados no Render, e o Postgres gratuito do Render expiraria em 30 dias.
+- **Integrar é a parte em que mais aparecem erros.** Endereço que não bate, variável com nome errado, uma barra faltando no Health Check, a linguagem errada sugerida pela plataforma. Os erros não são sinal de fracasso: aparecem justamente nessas horas, e o que importa é como são encontrados e registrados.
+- **Cada mudança precisa de um commit e de um PR.** O commit registra o que mudou e por quê; o PR junta as mudanças, roda o CI e guarda a minha decisão de revisão. É isso que torna o trabalho rastreável — inclusive os erros, como os PRs que mergeei antes da hora.
+- **Revisar a IA é um trabalho de verdade.** Fui o auditor: aceitei, ajustei e rejeitei sugestões. Aprendi que a IA revisora pode olhar a versão errada do código, que silêncio numa resposta não é aprovação e que é preciso conferir com evidência.
+- **Testar com o caso real muda o resultado.** Os testes automáticos provam a lógica; só o ambiente publicado e os dados reais mostraram a lista de pendências longa demais e a versão errada do Node.
+
+### Onde a IA mais ajudou
+
+Velocidade para gerar código, testes e documentação rastreável; explicações passo a passo (técnica de Feynman) para eu entender cada etapa; e, como revisora independente, achar bugs reais e prová-los executando.
+
+### Onde a IA errou ou não entendeu o contexto
+
+Sugeriu SQLite sem considerar o deploy; propôs timer e desafios, inadequados para TDAH; não previu injeção de prompt no primeiro desenho do P-07; declarou o backend pronto antes da hora e revisou o próprio código sem enxergar 4 bugs de concorrência e fluxo; escreveu que mover "dá para voltar atrás" quando o app ainda não oferecia isso. O Copilot, como revisor, chegou a analisar uma versão desatualizada do código.
+
+### O que eu faria diferente
+
+Criar o repositório e configurar o acesso ao GitHub no primeiro dia; definir o critério de "pronto" e fazer a revisão independente desde o início, não no fim; combinar com a IA um sinal claro de "pode mergear" antes de aprovar cada PR.
