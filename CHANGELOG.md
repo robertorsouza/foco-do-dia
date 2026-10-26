@@ -2,7 +2,9 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
-## [Não lançado]
+## [1.0.0] - 2026-10-25
+
+Primeira versão entregue: app, API e banco publicados ([release](https://github.com/robertorsouza/foco-do-dia/releases/tag/v1.0.0)).
 
 ### Adicionado
 - Documentação de engenharia: requisitos, arquitetura, 4 ADRs, biblioteca de prompts (P-01 a P-08) e registro de uso de IA.

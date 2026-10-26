@@ -10,7 +10,7 @@ Planner diário para pessoas com TDAH: o dia dividido em manhã, tarde e noite, 
 
 > Mini projeto da especialização **Engenharia de Software com IA Generativa** (AKCIT/UFG). Feito com práticas de engenharia (requisitos, arquitetura, ADRs, TDD, CI e revisão de código) e IA generativa como copiloto em todas as etapas.
 
-**Design:** [protótipo clicável no Figma](https://www.figma.com/design/gHPzXZSxynPrBNYvhBu8Gp) · [jornadas do usuário](docs/jornadas.md) · **Vídeo de demonstração:** _(link a incluir)_
+**Design:** [protótipo clicável no Figma](https://www.figma.com/design/gHPzXZSxynPrBNYvhBu8Gp) · [jornadas do usuário](docs/jornadas.md)
 
 ---
 
